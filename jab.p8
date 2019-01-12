@@ -24,7 +24,7 @@ function createav(x, flipped)
   --how long each action lasts
   rollframes=9,
   jabframes=3,
-  jablagframes=15,
+  jablagframes=30,
  }
  add(avs,av)
  return av
@@ -50,8 +50,8 @@ function updateav(av)
  end
  
  --can't act out of jab
- if av.state!="jab" and
-    av.state!="jablab" then
+ if av.state=="none" or
+    av.state=="roll" then
   detectinputs(av)
  end
  
