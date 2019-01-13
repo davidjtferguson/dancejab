@@ -6,20 +6,29 @@ __lua__
 
 test=""
 
+--avatar
 function createav(x,flipped)
  local av={
+  --constants, play around with
+ 
   --how long each action lasts
+  -- in frames at 60fps
   rollframes=9,
   jabframes=6,
   jablagframes=30,
   
   --movement limits
+  -- in pixels/frame
   xacc=0.15,
   xmaxvel=1.3,
   xrollmaxvel=2,
+  
+  --xvel is multiplied by this
+  -- each frame there's no input
+  -- and not rolling
   xdecellrate=0.7,
   
-  --hitbox sizes
+  --hitbox sizes in pixels
   -- (won't effect visual)
   width=8,
   height=16,
