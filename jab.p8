@@ -207,11 +207,15 @@ end
 
 --only tested in x axis
 function aabbcollision(a,b)
- return
-  --a.y>b.y+b.height or
-  --a.y+a.height<b.y or
-  a.x>b.x+b.width or
-  a.x+a.width>b.x
+ if
+    --a.y>b.y+b.height or
+    --a.y+a.height<b.y or
+    a.x>b.x+b.width or
+    a.x+a.width<b.x then
+  return false
+ end
+ 
+ return true
 end
 __gfx__
 00000000bbbbbbbb00aaaa0000bbbb00000000000022220000aa8a80000000000000000000000000000000000000000000000000000000000000000000000000
