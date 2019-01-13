@@ -4,23 +4,21 @@ __lua__
 -- jab prototype
 -- footsies based fighting game
 
-avs={}
-
 test=""
 
-function createav(x, flipped)
+function createav(x,flipped)
  local av={
   x=x,
   xvel=0,
   xmaxvel=1.3,
   xacc=0.15,
-  xmod=0, --this var is dumb
   state="none",
   statetimer=0,
   xrollmaxvel=2,
   y=96,
   s=2,
-  sw=1,
+  width=8,
+  height=16,
   flipped=flipped,
   
   --how long each action lasts
@@ -32,7 +30,27 @@ function createav(x, flipped)
  return av
 end
 
+function createhitbox(w,h,av)
+ local box={
+  x=av.x,
+  y=av.y,
+  width=w,
+  height=h,
+  av=av,
+  pno=av.no,
+ }
+ add(hitboxes,box)
+ return box
+end
+
 function _init()
+ reset()
+end
+
+function reset()
+ avs={}
+ hitboxes={}
+
  p1=createav(24)
  p1.no=0
  
@@ -41,8 +59,20 @@ function _init()
 end
 
 function _update60()
+ --inputs
  for av in all(avs) do
   updateav(av)
+ end
+ 
+ for box in all(hitboxes) do
+  updatehitbox(box)
+ end
+ 
+ --collision
+ if aabbcollision(p1,p2) then
+  --bounce off eachother
+  p1.xvel=-0.5
+  p2.xvel=0.5
  end
 end
 
@@ -51,6 +81,15 @@ function updateav(av)
   av.statetimer-=1
  end
  
+ for box in all(hitboxes) do
+  if box.pno!=av.no then
+   if aabbcollision(av,box) then
+    --reset game
+    reset()
+   end
+  end
+ end
+
  --can't act out of jab
  if av.state=="none" or
     av.state=="roll" then
@@ -79,11 +118,6 @@ function updateav(av)
   av.s=3
  elseif av.state=="jab" then
   av.s=6
-  av.sw=2
-  
-  if av.flipped then
-   av.xmod=8
-  end
   
   if av.statetimer==0 then
    av.state="jablag"
@@ -91,9 +125,7 @@ function updateav(av)
   end
  elseif av.state=="jablag" then
   av.s=5
-  av.sw=1
   av.xvel=0
-  av.xmod=0
  end
  
  if av.statetimer==0 then
@@ -130,6 +162,22 @@ function detectinputs(av)
  if btnp(🅾️,av.no) then
   av.state="jab"
   av.statetimer=av.jabframes
+  createhitbox(8,4,av)
+ end
+end
+
+function updatehitbox(box)
+ if not box.av.flipped then
+  box.x=box.av.x+8
+  box.y=box.av.y+8
+ else
+  box.x=box.av.x-8
+  box.y=box.av.y+8
+ end
+ 
+ --remove once jab is over
+ if box.av.state=="jablag" then
+  del(hitboxes,box)
  end
 end
 
@@ -138,10 +186,23 @@ function _draw()
  
  map(0,0,0,0,16,16)
  
- spr(p1.s,p1.x-p1.xmod,p1.y,p1.sw,2,p1.flipped)
- spr(p2.s,p2.x-p2.xmod,p2.y,p2.sw,2,p2.flipped)
+ spr(p1.s,p1.x,p1.y,1,2,p1.flipped)
+ spr(p2.s,p2.x,p2.y,1,2,p2.flipped)
+
+ for box in all(hitboxes) do
+  spr(23,box.x,box.y,1,1,box.av.flipped)
+ end
 
  print(test,0,0)
+end
+
+--only tested in x axis
+function aabbcollision(a,b)
+ return
+  --a.y>b.y+b.height or
+  --a.y+a.height<b.y or
+  a.x>b.x+b.width or
+  a.x+a.width>b.x
 end
 __gfx__
 00000000bbbbbbbb00aaaa0000bbbb00000000000022220000aa8a80000000000000000000000000000000000000000000000000000000000000000000000000
