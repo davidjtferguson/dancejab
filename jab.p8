@@ -10,7 +10,7 @@ function createav(x,flipped)
  local av={
   --how long each action lasts
   rollframes=9,
-  jabframes=10,
+  jabframes=6,
   jablagframes=30,
   
   --movement limits
@@ -139,6 +139,17 @@ function updateav(av)
  
  if av.statetimer==0 then
   av.state="none"
+ end
+ 
+ --prevent leaving the screen
+ if av.x<0 then
+  av.x=0
+  av.xvel=0
+ end
+ 
+ if av.x+av.width>128 then
+  av.x=128-av.width
+  av.xvel=0
  end
  
  av.x+=av.xvel
