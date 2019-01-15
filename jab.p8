@@ -215,10 +215,10 @@ function updatehitbox(box)
   if aabbcollision(box,otherbox) and
      box.pno!=otherbox.pno then
    --hitboxes colided,
-   -- prevent avs
-   -- continuing approach
-   box.av.xvel*=-1
-   otherbox.av.xvel*=-1
+   -- seperate avs
+   -- (should be generic...)
+   p1.xvel=-1
+   p2.xvel=1
   end
  end 
 end
