@@ -30,6 +30,7 @@ function createav(x,flipped)
   
   --hitbox sizes in pixels
   -- (won't effect visual)
+  -- ... and probs don't work
   width=8,
   height=16,
   jabwidth=8,
@@ -209,6 +210,17 @@ function updatehitbox(box)
  if box.av.state=="jablag" then
   del(hitboxes,box)
  end
+ 
+ for otherbox in all(hitboxes) do
+  if aabbcollision(box,otherbox) and
+     box.pno!=otherbox.pno then
+   --hitboxes colided,
+   -- prevent avs
+   -- continuing approach
+   box.av.xvel*=-1
+   otherbox.av.xvel*=-1
+  end
+ end 
 end
 
 function _draw()
