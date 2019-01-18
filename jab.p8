@@ -89,9 +89,15 @@ function _update60()
  
  --collision
  if aabbcollision(p1,p2) then
+  --flip velocity, so walking
+  -- is strong against dashing
+  -- at gaining space.
+  p1.xvel*=-1
+  p2.xvel*=-1
+  
   --bounce off eachother
-  p1.xvel=-0.5
-  p2.xvel=0.5
+  p1.xvel-=0.25
+  p2.xvel+=0.25
  end
 end
 
