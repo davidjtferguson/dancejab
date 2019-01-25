@@ -71,6 +71,8 @@ end
 
 function _init()
 
+ test=""
+
  --how many wins for a set
  firstto=3
   
@@ -159,6 +161,11 @@ function updateav(av)
  end
  
  if av.state=="none" then
+  
+  if av.score==firstto then
+   _init()
+  end
+ 
   av.s=2
   
   if btn(⬅️,av.no) then
