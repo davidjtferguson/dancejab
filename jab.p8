@@ -13,14 +13,14 @@ function createav(x,flipped)
  
   --how long each action lasts
   -- in frames at 60fps
-  rollframes=5,
-  jabframes=20,
-  jablagframes=12,
+  rollframes=9,
+  jabframes=6,
+  jablagframes=27,
   
   --movement limits
   -- in pixels/frame
-  xacc=0.2,
-  xmaxvel=.5,
+  xacc=0.15,
+  xmaxvel=1.3,
   xrollmaxvel=2,
   
   --xvel is multiplied by this
@@ -46,9 +46,8 @@ function createav(x,flipped)
   x=x,
   xvel=0,
   y=96,
-  s=2,
+  s=4,
   flipped=flipped,
-  --start stopped
   state="start",
   statetimer=90,
  }
@@ -70,9 +69,8 @@ function createhitbox(w,h,av)
 end
 
 function _init()
-
  test=""
-
+ 
  --how many wins for a set
  firstto=3
   
@@ -133,9 +131,8 @@ function updateav(av)
  for box in all(hitboxes) do
   if box.pno!=av.no then
    if aabbcollision(av,box) then
-    --reset game
+    --score update
     if av.no==0 then
-     test="hit"
      p2.score+=1
      
      if p2.score==firstto then
@@ -161,7 +158,9 @@ function updateav(av)
  end
  
  if av.state=="none" then
-  
+  --check for winner
+  -- (after round end pause)
+  -- and hard reset
   if av.score==firstto then
    _init()
   end
@@ -289,7 +288,7 @@ function _draw()
  print(p1.score,5,5)
  print(p2.score,120,5)
 
- print(test,0,0)
+ print(test,30,64)
 end
 
 --only tested in x axis
