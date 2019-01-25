@@ -70,18 +70,32 @@ function createhitbox(w,h,av)
 end
 
 function _init()
+
+ --how many wins for a set
+ firstto=3
+  
  reset()
+ 
+ p1.score=0
+ p2.score=0
 end
 
 function reset()
+ if p1 then
+  scorep1=p1.score
+  scorep2=p2.score
+ end
+ 
  avs={}
  hitboxes={}
 
  p1=createav(24)
  p1.no=0
+ p1.score=scorep1
  
  p2=createav(96,true)
  p2.no=1
+ p2.score=scorep2
 end
 
 function _update60()
@@ -100,8 +114,8 @@ function _update60()
   -- flips velocity, so walking
   -- is strong against dashing
   -- at gaining space.
-  p1.xvel*=av.xcollisionmult
-  p2.xvel*=av.xcollisionmult
+  p1.xvel*=p1.xcollisionmult
+  p2.xvel*=p2.xcollisionmult
   
   --bounce off eachother
   p1.xvel-=0.25
@@ -118,7 +132,21 @@ function updateav(av)
   if box.pno!=av.no then
    if aabbcollision(av,box) then
     --reset game
-    test="player "..(1+av.no).." lost!"
+    if av.no==0 then
+     test="hit"
+     p2.score+=1
+     
+     if p2.score==firstto then
+      test="player 2 wins!!"
+     end
+    else
+     p1.score+=1
+     
+     if p1.score==firstto then
+      test="player 1 wins!!"
+     end
+    end
+    
     reset()
    end
   end
@@ -250,6 +278,9 @@ function _draw()
  for box in all(hitboxes) do
   spr(23,box.x,box.y,1,1,box.av.flipped)
  end
+
+ print(p1.score,5,5)
+ print(p2.score,120,5)
 
  print(test,0,0)
 end
