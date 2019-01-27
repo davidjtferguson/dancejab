@@ -172,10 +172,15 @@ function updateav(av)
   av.onground=true
  else
   if av.onground then
-   sfx(5)
-   scoreupdate(av)
+  
+   --don't want double death
+   if av.state!="dead" then
+    sfx(5)
+    scoreupdate(av)
+    av.statetimer=90
+   end
+   
    av.state="ringout"
-   av.statetimer=90
   end
 
   av.onground=false
@@ -232,13 +237,22 @@ function updateav(av)
   av.xvel=0
  elseif av.state=="dead" then
   av.s=8
-  av.xvel=0
+  
+  --stagger away?
+  -- undecided. cheap fix for
+  -- repeated bumping sfx play
+  if av.flipped then
+   av.xvel=0.5
+  else
+   av.xvel=-0.5
+  end
   
   if av.statetimer==0 then
    reset()
   end
  elseif av.state=="ringout" then
   av.yvel+=gravity
+  av.xvel*=0.8
   
   if av.statetimer==0 then
    reset()
@@ -248,18 +262,7 @@ function updateav(av)
  if av.statetimer==0 then
   av.state="none"
  end
- 
- --prevent leaving the screen
- if av.x<0 then
-  av.x=0
-  av.xvel=0
- end
- 
- if av.x+av.width>128 then
-  av.x=128-av.width
-  av.xvel=0
- end
- 
+
  av.x+=av.xvel
  av.y+=av.yvel
 end
@@ -281,7 +284,7 @@ function hitboxcollision(av)
  end
 end
 
---in: av that just died
+--pass in av that just died
 function scoreupdate(av)
  if av.no==0 then
   p2.score+=1
