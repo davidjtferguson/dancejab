@@ -46,10 +46,10 @@ function createav(x,flipped)
   x=x,
   xvel=0,
   y=96,
-  s=4,
+  s=2,
   flipped=flipped,
-  state="start",
-  statetimer=90,
+  state="none",
+  statetimer=0,
  }
  add(avs,av)
  return av
@@ -123,99 +123,6 @@ function _update60()
  end
 end
 
-function updateav(av)
- if av.statetimer>0 then
-  av.statetimer-=1
- end
- 
- for box in all(hitboxes) do
-  if box.pno!=av.no then
-   if aabbcollision(av,box) then
-    --score update
-    if av.no==0 then
-     p2.score+=1
-     
-     if p2.score==firstto then
-      test="player 2 wins!!"
-     end
-    else
-     p1.score+=1
-     
-     if p1.score==firstto then
-      test="player 1 wins!!"
-     end
-    end
-    
-    reset()
-   end
-  end
- end
-
- --can't act out of jab
- if av.state=="none" or
-    av.state=="roll" then
-  detectinputs(av)
- end
- 
- if av.state=="none" then
-  --check for winner
-  -- (after round end pause)
-  -- and hard reset
-  if av.score==firstto then
-   _init()
-  end
- 
-  av.s=2
-  
-  if btn(⬅️,av.no) then
-   av.xvel-=av.xacc
-  elseif btn(➡️,av.no) then
-   av.xvel+=av.xacc
-  else
-   av.xvel*=av.xdecellrate
-  end
-  
-  if av.xvel>av.xmaxvel then
-   av.xvel=av.xmaxvel
-  end
-  
-  if av.xvel<-av.xmaxvel then
-   av.xvel=-av.xmaxvel
-  end
- elseif av.state=="roll" then
-  av.s=3
- elseif av.state=="jab" then
-  av.s=6
-  
-  if av.statetimer==0 then
-   av.state="jablag"
-   av.statetimer=av.jablagframes
-  end
- elseif av.state=="jablag" then
-  av.s=5
-  av.xvel=0
- elseif av.state=="start" then
-  av.s=4
- end
- 
- if av.statetimer==0 then
-  av.state="none"
- end
- 
- --prevent leaving the screen
- if av.x<0 then
-  av.x=0
-  av.xvel=0
- end
- 
- if av.x+av.width>128 then
-  av.x=128-av.width
-  av.xvel=0
- end
- 
- av.x+=av.xvel
-end
-
 function detectinputs(av)
  -- roll triggered
  if btnp(❎,av.no) then
@@ -244,6 +151,121 @@ function detectinputs(av)
   av.state="jab"
   av.statetimer=av.jabframes
   createhitbox(av.jabwidth,av.jabheight,av)
+ end
+end
+
+function updateav(av)
+ if av.statetimer>0 then
+  av.statetimer-=1
+ end
+ 
+ hitboxcollision(av)
+ 
+ --can only act in some states
+ if av.state=="none" or
+    av.state=="roll" then
+  detectinputs(av)
+ end
+ 
+ if av.state=="none" then
+  --check for winner
+  -- (after round end pause)
+  -- and hard reset
+  if av.score==firstto then
+   _init()
+  end
+ 
+  av.s=2
+  
+  --walking
+  if btn(⬅️,av.no) then
+   av.xvel-=av.xacc
+  elseif btn(➡️,av.no) then
+   av.xvel+=av.xacc
+  else
+   av.xvel*=av.xdecellrate
+  end
+  
+  if av.xvel>av.xmaxvel then
+   av.xvel=av.xmaxvel
+  end
+  
+  if av.xvel<-av.xmaxvel then
+   av.xvel=-av.xmaxvel
+  end
+ elseif av.state=="roll" then
+  av.s=3
+ elseif av.state=="jab" then
+  av.s=6
+  
+  if av.statetimer==0 then
+   av.state="jablag"
+   av.statetimer=av.jablagframes
+  end
+ elseif av.state=="jablag" then
+  av.s=5
+  av.xvel=0
+ elseif av.state=="won" then
+  av.s=9
+  av.xvel=0
+ elseif av.state=="dead" then
+  av.s=8
+  av.xvel=0
+  
+  if av.statetimer==0 then
+   reset()
+  end
+ end
+ 
+ if av.statetimer==0 then
+  av.state="none"
+ end
+ 
+ --prevent leaving the screen
+ if av.x<0 then
+  av.x=0
+  av.xvel=0
+ end
+ 
+ if av.x+av.width>128 then
+  av.x=128-av.width
+  av.xvel=0
+ end
+ 
+ av.x+=av.xvel
+end
+
+function hitboxcollision(av)
+ for box in all(hitboxes) do
+  if box.pno!=av.no then
+   if aabbcollision(av,box) then
+    --score update
+    if av.no==0 then
+     p2.score+=1
+     
+     if p2.score==firstto then
+      test="player 2 wins!!"
+     end
+     p2.state="won"
+     p2.statetimer=90
+    
+    else
+     p1.score+=1
+     
+     if p1.score==firstto then
+      test="player 1 wins!!"
+     end
+     p1.state="won"
+     p1.statetimer=90
+    
+    end
+    
+    del(hitboxes,box)
+    
+    av.state="dead"
+    av.statetimer=90
+   end
+  end
  end
 end
 
@@ -304,22 +326,22 @@ function aabbcollision(a,b)
  return true
 end
 __gfx__
-00000000bbbbbbbb00aaaa0000bbbb0000cccc000022220000aa8a80000000000000000000000000000000000000000000000000000000000000000000000000
-00000000bbbbbbbb0aaaa8a00bbbb8b00cccc8c0022228200aaaa8a0000000000000000000000000000000000000000000000000000000000000000000000000
-00700700bbbbbbbb0aaaaaa00bbbbbb00cccccc0022222200aaa8a80000000000000000000000000000000000000000000000000000000000000000000000000
-00077000bbbbbbbb00aaddd000bbddd000ccddd00022ddd000aaddd0000000000000000000000000000000000000000000000000000000000000000000000000
-00077000bbbbbbbb000aa000000bb000000cc00000022000000aa000000000000000000000000000000000000000000000000000000000000000000000000000
-00700700bbbbbbbb000aa000000bb000000cc00000022000000aa000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000bbbbbbbb00aaaa0000bbbb0000cccc000022220000aaaa00000000000000000000000000000000000000000000000000000000000000000000000000
-00000000bbbbbbbb0aaaaaa00bbbbbb00cccccc0022222200aaaaaa0000000000000000000000000000000000000000000000000000000000000000000000000
-33333333ccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaa8888888800000000000000000000000000000000000000000000000000000000000000000
-33333333ccccccccaaaaaaa9bbbbbbbdcccccccd22222292aaaaaaa8888888880000000000000000000000000000000000000000000000000000000000000000
-33333333ccccccccaaaa999abbbbdddbccccdddc22229922aaaa9888888888800000000000000000000000000000000000000000000000000000000000000000
-33333333ccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaa0000000000000000000000000000000000000000000000000000000000000000000000000
-33333333ccccccccaaaaaaa0bbbbbbb0ccccccc022222220aaaaaaa0000000000000000000000000000000000000000000000000000000000000000000000000
-33333333cccccccc0aaaaa000bbbbb000ccccc00022222000aaaaa00000000000000000000000000000000000000000000000000000000000000000000000000
-33333333cccccccc0a00a0000b00b0000c00c000020020000a00a000000000000000000000000000000000000000000000000000000000000000000000000000
-33333333cccccccc09a09a000d70d7000d70d70009a09a0009a09a00000000000000000000000000000000000000000000000000000000000000000000000000
+00000000bbbbbbbb00aaaa0000bbbb0000cccc000022220000aa8a800000000000aa8a8000aaaa00000000000000000000000000000000000000000000000000
+00000000bbbbbbbb0aa8a8a00bb8b8b00cc8c8c0022828200aaaa8a0000000000aaaa8a00aa8a8a0000000000000000000000000000000000000000000000000
+00700700bbbbbbbb0aaaaaa00bbbbbb00cccccc0022222200aaa8a80000000000aaa8a800a4aaaa0000000000000000000000000000000000000000000000000
+00077000bbbbbbbb00aaddd000bbddd000ccddd00022ddd000aaddd00000000000aa777000a44440000000000000000000000000000000000000000000000000
+00077000bbbbbbbb000aa000000bb000000cc00000022000000aa00000000000000a7870000aa000000000000000000000000000000000000000000000000000
+00700700bbbbbbbb000aa000000bb000000cc00000022000000aa00000000000000a8000000aa000000000000000000000000000000000000000000000000000
+00000000bbbbbbbb00aaaa0000bbbb0000cccc000022220000aaaa000000000000a88a0000aaaa00000000000000000000000000000000000000000000000000
+00000000bbbbbbbb0aaaaaa00bbbbbb00cccccc0022222200aaaaaa0000000000aaaaaa00aaa9aa0000000000000000000000000000000000000000000000000
+33333333ccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaaa40000000aaaaaa88aaaa9aaa000000000000000000000000000000000000000000000000
+33333333ccccccccaaaaaaa9bbbbbbbdcccccccd22222292aaaaa94446666666aaa88800aaaa999a000000000000000000000000000000000000000000000000
+33333333ccccccccaaaa999abbbbdddbccccdddc22229922aaaaaa9940000000aaaa9898aaaa999a000000000000000000000000000000000000000000000000
+33333333ccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaa000000000aaaaa980aaaa9aaa000000000000000000000000000000000000000000000000
+33333333ccccccccaaaaaaa0bbbbbbb0ccccccc022222220aaaaaaa000000000aaaaaaa0aaaaaaa0000000000000000000000000000000000000000000000000
+33333333cccccccc0aaaaa000bbbbb000ccccc00022222000aaaaa00000000000aaaaa000aaaaa00000000000000000000000000000000000000000000000000
+33333333cccccccc0a00a0000b00b0000c00c000020020000a00a000000000000a00a0000a00a000000000000000000000000000000000000000000000000000
+33333333cccccccc09a09a000d70d7000d70d70009a09a0009a09a000000000009a09a0009a09a00000000000000000000000000000000000000000000000000
 __label__
 11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc
 11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc11111111cccccccc
