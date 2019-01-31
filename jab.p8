@@ -14,14 +14,14 @@ function createav(x,flipped)
   --how long each action lasts
   -- in frames at 60fps
   rollframes=9,
-  jabframes=6,
-  jablagframes=27,
+  jabframes=7,
+  jablagframes=25,
   
   --movement limits
   -- in pixels/frame
-  xacc=0.15,
+  xacc=0.4,
   xmaxvel=1.3,
-  xrollmaxvel=2,
+  xrollmaxvel=1.8,
   
   --xvel is multiplied by this
   -- each frame there's no input
