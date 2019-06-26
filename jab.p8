@@ -34,11 +34,11 @@ function createav(x,flipped)
   -- -1 to reverse current vel
   xcollisionmult=-1,
   
-  --hitbox sizes in pixels
-  -- (won't effect visual)
-  -- ... and probs don't work
-  width=8,
+  --av hurtbox in pixels
+  width=16,
   height=16,
+
+  --hitbox sizes in pixels
   jabwidth=6,
   jabheight=4,
   
@@ -47,7 +47,7 @@ function createav(x,flipped)
   xvel=0,
   y=96,
   yvel=0,
-  s=2,
+  s=64,
   flipped=flipped,
   state="none",
   statetimer=0,
@@ -70,15 +70,19 @@ function createhitbox(w,h,av)
 end
 
 function _init()
- anounce=""
- 
+ --constants
  --how many wins for a set
  firstto=3
  
  gravity=0.15
-  
+
+ --for debugging
+ drawhitboxes=true
+
  reset()
  
+ --vars
+ announce=""
  p1.score=0
  p2.score=0
 end
@@ -199,7 +203,7 @@ function updateav(av)
    _init()
   end
  
-  av.s=2
+  av.s=64
   
   --walking
   if btn(⬅️,av.no) then
@@ -218,22 +222,33 @@ function updateav(av)
    av.xvel=-av.xmaxvel
   end
  elseif av.state=="roll" then
-  av.s=3
+  --p lumpy, need to seperate out
+  -- animation system
+  if (not av.flipped and
+     av.xvel>0) or
+     (av.flipped and
+     av.xvel<0) then 
+   av.s=96
+  else
+   av.s=98
+  end
  elseif av.state=="jab" then
-  av.s=6
+  av.s=74
   
   if av.statetimer==0 then
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
  elseif av.state=="jablag" then
-  av.s=5
+  av.s=100
   av.xvel=0
  elseif av.state=="won" then
-  av.s=9
+  --todo:sort specific sprite
+  av.s=66
   av.xvel=0
  elseif av.state=="dead" then
-  av.s=8
+  --todo:sort specific sprite
+  av.s=110
   
   --stagger away?
   -- undecided. cheap fix for
@@ -248,6 +263,9 @@ function updateav(av)
    reset()
   end
  elseif av.state=="ringout" then
+  --todo:sort specific sprite
+  av.s=110
+  
   av.yvel+=gravity
   av.xvel*=0.8
   
@@ -287,7 +305,7 @@ function updatescore(av)
   p2.score+=1
   
   if p2.score==firstto then
-   anounce="player 2 wins!!"
+   announce="player 2 wins!!"
    sfx(3)
   end
   p2.state="won"
@@ -297,7 +315,7 @@ function updatescore(av)
   p1.score+=1
   
   if p1.score==firstto then
-   anounce="player 1 wins!!"
+   announce="player 1 wins!!"
    sfx(3)
   end
   p1.state="won"
@@ -337,19 +355,21 @@ function _draw()
  
  map(0,0,0,0,16,16)
  
- spr(p1.s,p1.x,p1.y,1,2,p1.flipped)
- spr(p2.s,p2.x,p2.y,1,2,p2.flipped)
+ spr(p1.s,p1.x,p1.y,2,2,p1.flipped)
+ spr(p2.s,p2.x,p2.y,2,2,p2.flipped)
 
- for box in all(hitboxes) do
-  rectfill(box.x,box.y,
-   box.x+box.width,
-   box.y+box.height,11)
+ if drawhitboxes then
+  for box in all(hitboxes) do
+    rectfill(box.x,box.y,
+    box.x+box.width,
+    box.y+box.height,11)
+  end
  end
-
+ 
  --game info
  print(p1.score,5,5)
  print(p2.score,120,5)
- print(anounce,30,64)
+ print(announce,30,64)
  
  --debug info
  print(test,0,0)
