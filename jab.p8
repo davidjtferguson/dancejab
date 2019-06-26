@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
--- jab prototype
+-- dancejab prototype
 -- footsies based fighting game
 
 test=""
@@ -34,12 +34,27 @@ function createav(x,flipped)
   -- -1 to reverse current vel
   xcollisionmult=-1,
   
-  --hitbox sizes in pixels
-  -- (won't effect visual)
-  -- ... and probs don't work
-  width=8,
+  --av size
+  width=16,
   height=16,
-  jabwidth=8,
+
+  -- x,y local to av x,y
+  hurtbox={
+   x=5,
+   y=6,
+   width=5,
+   height=10,
+  },
+
+  pushbox={
+   x=2,
+   y=3,
+   width=12,
+   height=10,
+  },
+
+  --hitbox sizes in pixels
+  jabwidth=6,
   jabheight=4,
   
   --vars, don't edit
@@ -47,7 +62,7 @@ function createav(x,flipped)
   xvel=0,
   y=96,
   yvel=0,
-  s=2,
+  s=64,
   flipped=flipped,
   state="none",
   statetimer=0,
@@ -70,15 +85,18 @@ function createhitbox(w,h,av)
 end
 
 function _init()
- anounce=""
- 
+ --constants
  --how many wins for a set
  firstto=3
- 
  gravity=0.15
-  
+
+ --for debugging
+ drawhitboxes=true
+
  reset()
  
+ --vars
+ announce=""
  p1.score=0
  p2.score=0
 end
@@ -111,8 +129,10 @@ function _update60()
   updatehitbox(box)
  end
  
- --collision
- if aabbcollision(p1,p2) then
+ if aabbcollision(
+     globalbox(p1,p1.pushbox),
+     globalbox(p2,p2.pushbox))
+ then
   sfx(4)
   --if -1
   -- flips velocity, so walking
@@ -122,8 +142,8 @@ function _update60()
   p2.xvel*=p2.xcollisionmult
   
   --bounce off eachother
-  p1.xvel-=0.25
-  p2.xvel+=0.25
+  p1.xvel-=0.5
+  p2.xvel+=0.5
  end
 end
 
@@ -199,7 +219,7 @@ function updateav(av)
    _init()
   end
  
-  av.s=2
+  av.s=64
   
   --walking
   if btn(⬅️,av.no) then
@@ -218,22 +238,33 @@ function updateav(av)
    av.xvel=-av.xmaxvel
   end
  elseif av.state=="roll" then
-  av.s=3
+  --p lumpy, need to seperate out
+  -- animation system
+  if (not av.flipped and
+     av.xvel>0) or
+     (av.flipped and
+     av.xvel<0) then 
+   av.s=96
+  else
+   av.s=98
+  end
  elseif av.state=="jab" then
-  av.s=6
+  av.s=74
   
   if av.statetimer==0 then
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
  elseif av.state=="jablag" then
-  av.s=5
+  av.s=100
   av.xvel=0
  elseif av.state=="won" then
-  av.s=9
+  --todo:sort specific sprite
+  av.s=66
   av.xvel=0
  elseif av.state=="dead" then
-  av.s=8
+  --todo:sort specific sprite
+  av.s=110
   
   --stagger away?
   -- undecided. cheap fix for
@@ -248,6 +279,9 @@ function updateav(av)
    reset()
   end
  elseif av.state=="ringout" then
+  --todo:sort specific sprite
+  av.s=110
+
   av.yvel+=gravity
   av.xvel*=0.8
   
@@ -267,7 +301,8 @@ end
 function hitboxcollision(av)
  for box in all(hitboxes) do
   if box.pno!=av.no then
-   if aabbcollision(av,box) then
+
+   if aabbcollision(globalbox(av,av.hurtbox),box) then
     --death scream
     sfx(2)
     updatescore(av)
@@ -287,7 +322,7 @@ function updatescore(av)
   p2.score+=1
   
   if p2.score==firstto then
-   anounce="player 2 wins!!"
+   announce="player 2 wins!!"
    sfx(3)
   end
   p2.state="won"
@@ -297,7 +332,7 @@ function updatescore(av)
   p1.score+=1
   
   if p1.score==firstto then
-   anounce="player 1 wins!!"
+   announce="player 1 wins!!"
    sfx(3)
   end
   p1.state="won"
@@ -306,12 +341,13 @@ function updatescore(av)
 end
 
 function updatehitbox(box)
+ --track av pos
  if not box.av.flipped then
-  box.x=box.av.x+8
-  box.y=box.av.y+8
+  box.x=box.av.x+box.av.width
+  box.y=box.av.y
  else
-  box.x=box.av.x-8
-  box.y=box.av.y+8
+  box.x=box.av.x-box.width-1
+  box.y=box.av.y
  end
  
  --remove once jab is over
@@ -336,23 +372,51 @@ function _draw()
  
  map(0,0,0,0,16,16)
  
- spr(p1.s,p1.x,p1.y,1,2,p1.flipped)
- spr(p2.s,p2.x,p2.y,1,2,p2.flipped)
+ spr(p1.s,p1.x,p1.y,2,2,p1.flipped)
+ spr(p2.s,p2.x,p2.y,2,2,p2.flipped)
 
- for box in all(hitboxes) do
-  spr(23,box.x,box.y,1,1,box.av.flipped)
+ --drawbox(p1,p1.pushbox,5)
+ --drawbox(p1,p1.hurtbox,9)
+
+ if drawhitboxes then
+  for box in all(hitboxes) do
+    rectfill(box.x,box.y,
+    box.x+box.width,
+    box.y+box.height,11)
+  end
  end
-
+ 
  --game info
  print(p1.score,5,5)
  print(p2.score,120,5)
- print(anounce,30,64)
+ print(announce,30,64)
  
  --debug info
  print(test,0,0)
 end
 
---only tested in x axis
+-->8
+--collisions
+
+function drawbox(av,box,col)
+ rectfill(av.x+box.x,
+  av.y+p1.hurtbox.y,
+  av.x+box.x+box.width,
+  av.y+box.y+box.height,col)
+end
+
+--convert box from av local
+-- to global coords
+function globalbox(av,box)
+ return {
+  x=av.x+box.x,
+  y=av.y+box.y,
+  width=box.width,
+  height=box.height,
+ }
+end
+
+--only in x axis
 function aabbcollision(a,b)
  if
     --a.y>b.y+b.height or
@@ -364,8 +428,6 @@ function aabbcollision(a,b)
  
  return true
 end
--->8
---utils
 
 function checkavflagarea(av,f)
  return checkflagarea(av.x,av.y,av.width,av.height,f)
@@ -393,9 +455,9 @@ __gfx__
 007007002d2222d6000aa000000bb000000cc00000022000000aa00000000000000a8000000aa0000988889009cccc9006767700006777770700775777770670
 000000002dddddd600aaaa0000bbbb0000cccc000022220000aaaa000000000000a88a0000aaaa0004a88a4004acca4006755006707777770700770777770670
 000000002222222d0aaaaaa00bbbbbb00cccccc0022222200aaaaaa0000000000aaaaaa00aaa9aa0004994000049940007777007707700006700770067000670
-5dddddddccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaaa40000000aaaaaa88aaaa9aaa0049940000000000077670077077006707777705770b5770
-2555555dccccccccaaaaaaa9bbbbbbbdcccccccd22222292aaaaa94446666666aaa88800aaaa999a04adda4000000000077000077077007707777700770bb00b
-255ddd5dccccccccaaaa999abbbbdddbccccdddc22229922aaaaaa9940000000aaaa9898aaaa999a09dd6790000000000770bb076077777707007700770bbbbb
+5dddddddccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaaa00000000aaaaaa88aaaa9aaa0049940000000000077670077077006707777705770b5770
+2555555dccccccccaaaaaaa9bbbbbbbdcccccccd22222292aaaaa94400000000aaa88800aaaa999a04adda4000000000077000077077007707777700770bb00b
+255ddd5dccccccccaaaa999abbbbdddbccccdddc22229922aaaaaa9900000000aaaa9898aaaa999a09dd6790000000000770bb076077777707007700770bbbbb
 25255d5dccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaa000000000aaaaa980aaaa9aaa09dd7690000000000670bb055067777707007700770b5000
 25255d5dccccccccaaaaaaa0bbbbbbb0ccccccc022222220aaaaaaa000000000aaaaaaa0aaaaaaa009dddd90000000000770bbbbbb05500007007700770b0670
 2522255dcccccccc0aaaaa000bbbbb000ccccc00022222000aaaaa00000000000aaaaa000aaaaa0009dddd90000000000000bbbbbbbbbbb005bb5000670b0660
