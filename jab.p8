@@ -47,7 +47,6 @@ function createav(x,flipped)
   xvel=0,
   y=96,
   yvel=0,
-  onground=true,
   s=2,
   flipped=flipped,
   state="none",
@@ -166,24 +165,22 @@ function updateav(av)
   av.statetimer-=1
  end
 
- --onground?
+ --on ground?
  if checkavflagarea(av,0) then
   av.yvel=0
-  av.onground=true
  else
-  if av.onground then
+  --on first ringout detection
+  if av.state!="ringout" then
   
    --don't want double death
    if av.state!="dead" then
     sfx(5)
-    scoreupdate(av)
+    updatescore(av)
     av.statetimer=90
    end
    
    av.state="ringout"
   end
-
-  av.onground=false
  end
  
  hitboxcollision(av)
@@ -217,7 +214,7 @@ function updateav(av)
    av.xvel=av.xmaxvel
   end
   
-  if av.xvel<-av.xmaxvel then
+  if av.xvel<(-av.xmaxvel) then
    av.xvel=-av.xmaxvel
   end
  elseif av.state=="roll" then
@@ -273,7 +270,7 @@ function hitboxcollision(av)
    if aabbcollision(av,box) then
     --death scream
     sfx(2)
-    scoreupdate(av)
+    updatescore(av)
     
     av.state="dead"
     av.statetimer=90
@@ -285,7 +282,7 @@ function hitboxcollision(av)
 end
 
 --pass in av that just died
-function scoreupdate(av)
+function updatescore(av)
  if av.no==0 then
   p2.score+=1
   
