@@ -39,7 +39,7 @@ function createav(x,flipped)
   -- ... and probs don't work
   width=8,
   height=16,
-  jabwidth=8,
+  jabwidth=6,
   jabheight=4,
   
   --vars, don't edit
@@ -306,12 +306,13 @@ function updatescore(av)
 end
 
 function updatehitbox(box)
+ --track av pos
  if not box.av.flipped then
-  box.x=box.av.x+8
-  box.y=box.av.y+8
+  box.x=box.av.x+box.av.width
+  box.y=box.av.y
  else
-  box.x=box.av.x-8
-  box.y=box.av.y+8
+  box.x=box.av.x-box.width-1
+  box.y=box.av.y
  end
  
  --remove once jab is over
@@ -340,7 +341,9 @@ function _draw()
  spr(p2.s,p2.x,p2.y,1,2,p2.flipped)
 
  for box in all(hitboxes) do
-  spr(23,box.x,box.y,1,1,box.av.flipped)
+  rectfill(box.x,box.y,
+   box.x+box.width,
+   box.y+box.height,11)
  end
 
  --game info
@@ -352,7 +355,10 @@ function _draw()
  print(test,0,0)
 end
 
---only tested in x axis
+-->8
+--collisions
+
+--only in x axis
 function aabbcollision(a,b)
  if
     --a.y>b.y+b.height or
@@ -364,8 +370,6 @@ function aabbcollision(a,b)
  
  return true
 end
--->8
---utils
 
 function checkavflagarea(av,f)
  return checkflagarea(av.x,av.y,av.width,av.height,f)
@@ -393,9 +397,9 @@ __gfx__
 007007002d2222d6000aa000000bb000000cc00000022000000aa00000000000000a8000000aa0000988889009cccc9006767700006777770700775777770670
 000000002dddddd600aaaa0000bbbb0000cccc000022220000aaaa000000000000a88a0000aaaa0004a88a4004acca4006755006707777770700770777770670
 000000002222222d0aaaaaa00bbbbbb00cccccc0022222200aaaaaa0000000000aaaaaa00aaa9aa0004994000049940007777007707700006700770067000670
-5dddddddccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaaa40000000aaaaaa88aaaa9aaa0049940000000000077670077077006707777705770b5770
-2555555dccccccccaaaaaaa9bbbbbbbdcccccccd22222292aaaaa94446666666aaa88800aaaa999a04adda4000000000077000077077007707777700770bb00b
-255ddd5dccccccccaaaa999abbbbdddbccccdddc22229922aaaaaa9940000000aaaa9898aaaa999a09dd6790000000000770bb076077777707007700770bbbbb
+5dddddddccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaaa00000000aaaaaa88aaaa9aaa0049940000000000077670077077006707777705770b5770
+2555555dccccccccaaaaaaa9bbbbbbbdcccccccd22222292aaaaa94400000000aaa88800aaaa999a04adda4000000000077000077077007707777700770bb00b
+255ddd5dccccccccaaaa999abbbbdddbccccdddc22229922aaaaaa9900000000aaaa9898aaaa999a09dd6790000000000770bb076077777707007700770bbbbb
 25255d5dccccccccaaaaaaaabbbbbbbbcccccccc22222222aaaaaaa000000000aaaaa980aaaa9aaa09dd7690000000000670bb055067777707007700770b5000
 25255d5dccccccccaaaaaaa0bbbbbbb0ccccccc022222220aaaaaaa000000000aaaaaaa0aaaaaaa009dddd90000000000770bbbbbb05500007007700770b0670
 2522255dcccccccc0aaaaa000bbbbb000ccccc00022222000aaaaa00000000000aaaaa000aaaaa0009dddd90000000000000bbbbbbbbbbb005bb5000670b0660
