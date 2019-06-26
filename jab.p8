@@ -34,9 +34,18 @@ function createav(x,flipped)
   -- -1 to reverse current vel
   xcollisionmult=-1,
   
-  --av hurtbox in pixels
+  --av size
   width=16,
   height=16,
+
+  --av hurtbox
+  -- x,y local to av x,y
+  hurtbox={
+   x=5,
+   y=6,
+   width=5,
+   height=10,
+  },
 
   --hitbox sizes in pixels
   jabwidth=6,
@@ -265,7 +274,7 @@ function updateav(av)
  elseif av.state=="ringout" then
   --todo:sort specific sprite
   av.s=110
-  
+
   av.yvel+=gravity
   av.xvel*=0.8
   
@@ -285,7 +294,15 @@ end
 function hitboxcollision(av)
  for box in all(hitboxes) do
   if box.pno!=av.no then
-   if aabbcollision(av,box) then
+   --fix these together better
+   local worldhitbox={
+    x=av.x+av.hurtbox.x,
+    y=av.y+av.hurtbox.y,
+    width=av.hurtbox.width,
+    height=av.hurtbox.height,
+   }
+
+   if aabbcollision(worldhitbox,box) then
     --death scream
     sfx(2)
     updatescore(av)
@@ -357,6 +374,14 @@ function _draw()
  
  spr(p1.s,p1.x,p1.y,2,2,p1.flipped)
  spr(p2.s,p2.x,p2.y,2,2,p2.flipped)
+
+ --[[
+ --check hurtboxs
+ rectfill(p1.x+p1.hurtbox.x,
+  p1.y+p1.hurtbox.y,
+  p1.x+p1.hurtbox.x+p1.hurtbox.width,
+  p1.y+p1.hurtbox.y+p1.hurtbox.height)
+ ]]
 
  if drawhitboxes then
   for box in all(hitboxes) do
