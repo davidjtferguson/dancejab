@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
--- jab prototype
+-- dancejab prototype
 -- footsies based fighting game
 
 test=""
@@ -38,12 +38,18 @@ function createav(x,flipped)
   width=16,
   height=16,
 
-  --av hurtbox
   -- x,y local to av x,y
   hurtbox={
    x=5,
    y=6,
    width=5,
+   height=10,
+  },
+
+  pushbox={
+   x=2,
+   y=3,
+   width=12,
    height=10,
   },
 
@@ -82,7 +88,6 @@ function _init()
  --constants
  --how many wins for a set
  firstto=3
- 
  gravity=0.15
 
  --for debugging
@@ -124,8 +129,10 @@ function _update60()
   updatehitbox(box)
  end
  
- --collision
- if aabbcollision(p1,p2) then
+ if aabbcollision(
+     globalbox(p1,p1.pushbox),
+     globalbox(p2,p2.pushbox))
+ then
   sfx(4)
   --if -1
   -- flips velocity, so walking
@@ -135,8 +142,8 @@ function _update60()
   p2.xvel*=p2.xcollisionmult
   
   --bounce off eachother
-  p1.xvel-=0.25
-  p2.xvel+=0.25
+  p1.xvel-=0.5
+  p2.xvel+=0.5
  end
 end
 
@@ -294,15 +301,8 @@ end
 function hitboxcollision(av)
  for box in all(hitboxes) do
   if box.pno!=av.no then
-   --fix these together better
-   local worldhitbox={
-    x=av.x+av.hurtbox.x,
-    y=av.y+av.hurtbox.y,
-    width=av.hurtbox.width,
-    height=av.hurtbox.height,
-   }
 
-   if aabbcollision(worldhitbox,box) then
+   if aabbcollision(globalbox(av,av.hurtbox),box) then
     --death scream
     sfx(2)
     updatescore(av)
@@ -375,13 +375,8 @@ function _draw()
  spr(p1.s,p1.x,p1.y,2,2,p1.flipped)
  spr(p2.s,p2.x,p2.y,2,2,p2.flipped)
 
- --[[
- --check hurtboxs
- rectfill(p1.x+p1.hurtbox.x,
-  p1.y+p1.hurtbox.y,
-  p1.x+p1.hurtbox.x+p1.hurtbox.width,
-  p1.y+p1.hurtbox.y+p1.hurtbox.height)
- ]]
+ --drawbox(p1,p1.pushbox,5)
+ --drawbox(p1,p1.hurtbox,9)
 
  if drawhitboxes then
   for box in all(hitboxes) do
@@ -402,6 +397,24 @@ end
 
 -->8
 --collisions
+
+function drawbox(av,box,col)
+ rectfill(av.x+box.x,
+  av.y+p1.hurtbox.y,
+  av.x+box.x+box.width,
+  av.y+box.y+box.height,col)
+end
+
+--convert box from av local
+-- to global coords
+function globalbox(av,box)
+ return {
+  x=av.x+box.x,
+  y=av.y+box.y,
+  width=box.width,
+  height=box.height,
+ }
+end
 
 --only in x axis
 function aabbcollision(a,b)
