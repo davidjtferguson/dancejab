@@ -192,7 +192,8 @@ function updateav(av)
  end
 
  --on ground?
- if checkavflagarea(av,0) then
+ if checkavflagarea(
+    globalbox(av,av.hurtbox),0) then
   av.yvel=0
  else
   --on first ringout detection
