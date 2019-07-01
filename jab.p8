@@ -86,7 +86,12 @@ end
 
 function _init()
 	music(0)
-	
+
+ --duped in draw,
+ -- just for first frame...	
+ palt(0,false)
+ palt(11,true)
+
  --constants
  --how many wins for a set
  firstto=3
