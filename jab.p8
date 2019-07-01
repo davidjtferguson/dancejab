@@ -87,9 +87,6 @@ end
 function _init()
 	music(0)
 	
-	palt(0,false)
- palt(11,true)
-	
  --constants
  --how many wins for a set
  firstto=3
@@ -378,8 +375,19 @@ function _draw()
  map(0,0,0,0,16,16)
  
  spr(p1.s,p1.x,p1.y,2,2,p1.flipped)
+
+ pal(8,12)
+ pal(2,13)
+ pal(12,8)
+ pal(1,2)
+ pal(14,6)
+ 
  spr(p2.s,p2.x,p2.y,2,2,p2.flipped)
 
+ pal()
+ palt(0,false)
+ palt(11,true)
+	
  --drawbox(p1,p1.pushbox,5)
  --drawbox(p1,p1.hurtbox,9)
 
@@ -392,8 +400,8 @@ function _draw()
  end
  
  --game info
- print(p1.score,5,5)
- print(p2.score,120,5)
+ print(p1.score,5,5,8)
+ print(p2.score,120,5,12)
  print(announce,30,64)
  
  --debug info
