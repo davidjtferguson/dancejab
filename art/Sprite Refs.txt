@@ -6,9 +6,22 @@ Dash Recovery: 100
 Clink: 106
 Hit: 108
 Hit Recovery: 110
+Walk Fwd: 128, 130, 132, 134
+Walk Bck: 136, 138, 140, 142
+Lose: 160, 162, 164, 166
+Victory: 168, 170, 172, 174
+Falling: 192, 194
+Bump: 196
+Push: 198 > 200
+Pushed: 202
 
 SFX:
 
 Walk - 07
 Dash - 08
 Jab - 09 + 10 (variations)
+Bump - 11
+Push - 
+Hit - 12
+Final hit - 14
+Fall Off - 15
