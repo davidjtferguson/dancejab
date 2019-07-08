@@ -62,7 +62,7 @@ function createav(x,flipped)
   xvel=0,
   y=96,
   yvel=0,
-  s=64,
+  animt=createanimt(64,15,2),
   flipped=flipped,
   state="none",
   statetimer=0,
@@ -228,7 +228,7 @@ function updateav(av)
    _init()
   end
  
-  av.s=64
+  av.animt.basesprite=64
   
   --walking
   if btn(⬅️,av.no) then
@@ -253,27 +253,27 @@ function updateav(av)
      av.xvel>0) or
      (av.flipped and
      av.xvel<0) then 
-   av.s=96
+   av.animt.basesprite=96
   else
-   av.s=98
+   av.animt.basesprite=98
   end
  elseif av.state=="jab" then
-  av.s=74
+  av.animt.basesprite=74
   
   if av.statetimer==0 then
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
  elseif av.state=="jablag" then
-  av.s=100
+  av.animt.basesprite=100
   av.xvel=0
  elseif av.state=="won" then
   --todo:sort specific sprite
-  av.s=66
+  av.animt.basesprite=66
   av.xvel=0
  elseif av.state=="dead" then
   --todo:sort specific sprite
-  av.s=110
+  av.animt.basesprite=110
   
   --stagger away?
   -- undecided. cheap fix for
@@ -289,7 +289,7 @@ function updateav(av)
   end
  elseif av.state=="ringout" then
   --todo:sort specific sprite
-  av.s=110
+  av.animt.basesprite=110
 
   av.yvel+=gravity
   av.xvel*=0.8
@@ -302,6 +302,8 @@ function updateav(av)
  if av.statetimer==0 then
   av.state="none"
  end
+
+ updateanimt(av.animt)
 
  av.x+=av.xvel
  av.y+=av.yvel
@@ -379,14 +381,14 @@ function _draw()
  
  map(0,0,0,0,16,16)
  
- spr(p1.s,p1.x,p1.y,2,2,p1.flipped)
+ spr(p1.animt.sprite,p1.x,p1.y,2,2,p1.flipped)
 
  pal(8,12)
  pal(2,13)
  pal(12,8)
  pal(1,2)
  
- spr(p2.s,p2.x,p2.y,2,2,p2.flipped)
+ spr(p2.animt.sprite,p2.x,p2.y,2,2,p2.flipped)
 
  pal()
  palt(0,false)
@@ -461,6 +463,43 @@ end
 function checkflag(x,y,flag)
  local s=mget(x,y)
  return fget(s,flag)
+end
+
+-->8
+--animations
+
+function createanimt(bs,sd,sprs)
+ local t={
+  --animation specifics
+  basesprite=bs,
+  speed=sd,
+  sprites=sprs,
+
+  --variables
+  sprite=bs,
+  along=0,
+  counter=0
+ }
+ return t
+end
+
+--So, how should this be reset
+-- when a new anim starts?
+
+function updateanimt(t)
+ t.counter+=1
+ 
+ --double width sprites
+ t.along=flr(t.counter/t.speed)
+ t.along*=2
+
+ if t.counter>=
+    t.speed*t.sprites then
+  t.along=0
+  t.counter=0
+ end
+ 
+ t.sprite=t.basesprite+t.along
 end
 
 __gfx__
