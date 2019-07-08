@@ -84,9 +84,11 @@ function createhitbox(w,h,av)
  return box
 end
 
-function _init()
-	music(0)
+--todo: remove _init call
+-- & put music(0) in init
+music(0)
 
+function _init()
  --duped in draw,
  -- just for first frame...	
  palt(0,false)
@@ -227,9 +229,9 @@ function updateav(av)
   if av.score==firstto then
    _init()
   end
- 
-  av.animt.basesprite=64
-  
+
+  resetanim(av.animt,64,6,4,false)
+
   --walking
   if btn(⬅️,av.no) then
    av.xvel-=av.xacc
@@ -247,33 +249,27 @@ function updateav(av)
    av.xvel=-av.xmaxvel
   end
  elseif av.state=="roll" then
-  --p lumpy, need to seperate out
-  -- animation system
-  if (not av.flipped and
-     av.xvel>0) or
-     (av.flipped and
-     av.xvel<0) then 
-   av.animt.basesprite=96
+  if facingforward(av) then
+   resetanim(av.animt,96,av.rollframes,1,true)
   else
-   av.animt.basesprite=98
+   resetanim(av.animt,98,av.rollframes,1,true)
   end
  elseif av.state=="jab" then
-  av.animt.basesprite=74
+  resetanim(av.animt,74,av.jabframes/3,3,false)
   
   if av.statetimer==0 then
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
  elseif av.state=="jablag" then
-  av.animt.basesprite=100
+  resetanim(av.animt,100,1,1,true)
   av.xvel=0
  elseif av.state=="won" then
-  --todo:sort specific sprite
-  av.animt.basesprite=66
+  resetanim(av.animt,168,6,4,false)
   av.xvel=0
  elseif av.state=="dead" then
   --todo:sort specific sprite
-  av.animt.basesprite=110
+  resetanim(av.animt,110,1,1,true)
   
   --stagger away?
   -- undecided. cheap fix for
@@ -289,7 +285,7 @@ function updateav(av)
   end
  elseif av.state=="ringout" then
   --todo:sort specific sprite
-  av.animt.basesprite=110
+  resetanim(av.animt,192,1,1,true)
 
   av.yvel+=gravity
   av.xvel*=0.8
@@ -307,6 +303,17 @@ function updateav(av)
 
  av.x+=av.xvel
  av.y+=av.yvel
+end
+
+function facingforward(av)
+ if (not av.flipped and
+    av.xvel>0) or
+    (av.flipped and
+    av.xvel<0) then 
+  return true
+ else
+  return false
+ end
 end
 
 function hitboxcollision(av)
@@ -485,6 +492,19 @@ end
 
 --So, how should this be reset
 -- when a new anim starts?
+-- reset bool is kinda crappy
+
+function resetanim(t,bs,sd,sprs,reset)
+ t.basesprite=bs
+ t.speed=sd
+ t.sprites=sprs
+
+ if reset then
+  t.sprite=bs
+  t.along=0
+  t.counter=0
+ end
+end
 
 function updateanimt(t)
  t.counter+=1
