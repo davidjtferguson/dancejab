@@ -63,6 +63,7 @@ function createav(x,flipped)
   y=96,
   yvel=0,
   animt=createanimt(64,15,2),
+  anim=createanim({64,66,68,70}, 6),
   flipped=flipped,
   state="none",
   statetimer=0,
@@ -300,6 +301,7 @@ function updateav(av)
  end
 
  updateanimt(av.animt)
+ updateanim(av.anim)
 
  av.x+=av.xvel
  av.y+=av.yvel
@@ -388,7 +390,7 @@ function _draw()
  
  map(0,0,0,0,16,16)
  
- spr(p1.animt.sprite,p1.x,p1.y,2,2,p1.flipped)
+ spr(p1.anim.sprite,p1.x,p1.y,2,2,p1.flipped)
 
  pal(8,12)
  pal(2,13)
@@ -416,7 +418,7 @@ function _draw()
  print(p1.score,5,5,8)
  print(p2.score,120,5,12)
  print(announce,30,64)
- 
+
  --debug info
  print(test,0,0)
 end
@@ -490,10 +492,6 @@ function createanimt(bs,sd,sprs)
  return t
 end
 
---So, how should this be reset
--- when a new anim starts?
--- reset bool is kinda crappy
-
 function resetanim(t,bs,sd,sprs,reset)
  t.basesprite=bs
  t.speed=sd
@@ -520,6 +518,48 @@ function updateanimt(t)
  end
  
  t.sprite=t.basesprite+t.along
+end
+
+--can pass in singular sprite and speed
+-- or sprites and one speed
+function createanim(sprites,speeds)
+ local t={
+  --animation specifics
+  speeds=speeds,
+  sprites=sprites,
+
+  --variables
+  sprite=sprites[1],
+  along=1,
+  counter=0
+ }
+ return t
+end
+
+--todo:cope with single sprite
+-- and single speed
+function updateanim(a)
+ a.counter+=1
+
+ local speed=1
+
+ if type(a.speeds)=="number" then
+  speed=a.speeds
+ else
+  speed=a.speeds[a.along]
+ end
+
+ if a.counter>=
+    speed then
+  a.counter=0
+
+  a.along+=1
+  if a.along>#a.sprites then
+   a.along=1
+  end
+ end
+ 
+ a.sprite=a.sprites[a.along]
 end
 
 __gfx__
