@@ -62,7 +62,7 @@ function createav(x,flipped)
   xvel=0,
   y=96,
   yvel=0,
-  s=64,
+  anim=createanim({64,66,68,70}, 6),
   flipped=flipped,
   state="none",
   statetimer=0,
@@ -84,9 +84,11 @@ function createhitbox(w,h,av)
  return box
 end
 
-function _init()
-	music(0)
+--todo: remove _init call
+-- & put music(0) in init
+music(0)
 
+function _init()
  --duped in draw,
  -- just for first frame...	
  palt(0,false)
@@ -140,7 +142,8 @@ function _update60()
      globalbox(p1,p1.pushbox),
      globalbox(p2,p2.pushbox))
  then
-  sfx(4)
+  sfx(11)
+
   --if -1
   -- flips velocity, so walking
   -- is strong against dashing
@@ -181,8 +184,8 @@ function detectinputs(av)
  --jab
  if btnp(🅾️,av.no) then
   sfx(9+flr(rnd(2)))
-  sfx(9+flr(rnd(2)))
   av.state="jab"
+  av.anim=createanim({72,74,76},{3,1,3},false)
   av.statetimer=av.jabframes
   createhitbox(av.jabwidth,av.jabheight,av)
  end
@@ -203,7 +206,8 @@ function updateav(av)
   
    --don't want double death
    if av.state!="dead" then
-    sfx(5)
+    sfx(15)
+    av.anim=createanim({192,194},6,false)
     updatescore(av)
     av.statetimer=90
    end
@@ -227,9 +231,7 @@ function updateav(av)
   if av.score==firstto then
    _init()
   end
- 
-  av.s=64
-  
+
   --walking
   if btn(⬅️,av.no) then
    av.xvel-=av.xacc
@@ -247,34 +249,22 @@ function updateav(av)
    av.xvel=-av.xmaxvel
   end
  elseif av.state=="roll" then
-  --p lumpy, need to seperate out
-  -- animation system
-  if (not av.flipped and
-     av.xvel>0) or
-     (av.flipped and
-     av.xvel<0) then 
-   av.s=96
+  if facingforward(av) then
+   av.anim=createanim(96)
   else
-   av.s=98
+   av.anim=createanim(98)
   end
  elseif av.state=="jab" then
-  av.s=74
-  
   if av.statetimer==0 then
+   av.anim=createanim(100)
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
  elseif av.state=="jablag" then
-  av.s=100
   av.xvel=0
  elseif av.state=="won" then
-  --todo:sort specific sprite
-  av.s=66
   av.xvel=0
  elseif av.state=="dead" then
-  --todo:sort specific sprite
-  av.s=110
-  
   --stagger away?
   -- undecided. cheap fix for
   -- repeated bumping sfx play
@@ -288,9 +278,6 @@ function updateav(av)
    reset()
   end
  elseif av.state=="ringout" then
-  --todo:sort specific sprite
-  av.s=110
-
   av.yvel+=gravity
   av.xvel*=0.8
   
@@ -300,11 +287,28 @@ function updateav(av)
  end
  
  if av.statetimer==0 then
+  if av.state!="none" then
+   av.anim=createanim({64,66,68,70},6)
+  end
+
   av.state="none"
  end
 
+ updateanim(av.anim)
+
  av.x+=av.xvel
  av.y+=av.yvel
+end
+
+function facingforward(av)
+ if (not av.flipped and
+    av.xvel>0) or
+    (av.flipped and
+    av.xvel<0) then 
+  return true
+ else
+  return false
+ end
 end
 
 function hitboxcollision(av)
@@ -312,13 +316,20 @@ function hitboxcollision(av)
   if box.pno!=av.no then
 
    if aabbcollision(globalbox(av,av.hurtbox),box) then
-    --death scream
-    sfx(2)
+    --been punched!
+    if av.score==(firstto-1) then
+     sfx(15)
+    else
+     sfx(12)
+    end
+
+    av.anim=createanim({108,110},{6,1},false)
+
     updatescore(av)
-    
+
     av.state="dead"
     av.statetimer=90
-    
+
     del(hitboxes,box)
    end
   end
@@ -332,21 +343,24 @@ function updatescore(av)
   
   if p2.score==firstto then
    announce="player 2 wins!!"
-   sfx(3)
+   sfx(0)
   end
-  p2.state="won"
-  p2.statetimer=90
- 
+  setwin(p2)
  else
   p1.score+=1
   
   if p1.score==firstto then
    announce="player 1 wins!!"
-   sfx(3)
+   sfx(0)
   end
-  p1.state="won"
-  p1.statetimer=90
+  setwin(p1)
  end
+end
+
+function setwin(av)
+  av.state="won"
+  av.anim=createanim({168,170,172,174},6)
+  av.statetimer=90
 end
 
 function updatehitbox(box)
@@ -368,8 +382,16 @@ function updatehitbox(box)
    --hitboxes colided,
    -- seperate avs
    -- (should be generic...)
+   
+   p1.anim=createanim(106)
+   p2.anim=createanim(106)
    p1.xvel=-1
    p2.xvel=1
+   
+   --...or could just visually remove it
+   --todo:should have some sparks or something
+   del(hitboxes,box)
+   del(hitboxes,otherbox)
   end
  end 
 end
@@ -379,14 +401,14 @@ function _draw()
  
  map(0,0,0,0,16,16)
  
- spr(p1.s,p1.x,p1.y,2,2,p1.flipped)
+ spr(p1.anim.sprite,p1.x,p1.y,2,2,p1.flipped)
 
  pal(8,12)
  pal(2,13)
  pal(12,8)
  pal(1,2)
  
- spr(p2.s,p2.x,p2.y,2,2,p2.flipped)
+ spr(p2.anim.sprite,p2.x,p2.y,2,2,p2.flipped)
 
  pal()
  palt(0,false)
@@ -407,7 +429,7 @@ function _draw()
  print(p1.score,5,5,8)
  print(p2.score,120,5,12)
  print(announce,30,64)
- 
+
  --debug info
  print(test,0,0)
 end
@@ -461,6 +483,71 @@ end
 function checkflag(x,y,flag)
  local s=mget(x,y)
  return fget(s,flag)
+end
+
+-->8
+--animations
+
+--can pass in singular sprite and speed
+-- or sprites and one speed
+function createanim(sprites,speeds,looping)
+ local loop=true
+ if looping==false then
+  loop=false
+ end
+
+ local s=sprites
+ if type(sprites)=="table" then
+  s=sprites[1]
+ end
+
+ local t={
+  --animation specifics
+  speeds=speeds,
+  sprites=sprites,
+  looping=loop,
+
+  --variables
+  sprite=s,
+  along=1,
+  counter=0
+ }
+ return t
+end
+
+--copes with single sprite
+-- and single speed
+function updateanim(a)
+ if type(a.sprites)=="table" then
+  a.counter+=1
+
+  --cope with no speed,
+  -- a consistent number speed
+  -- or a table of different speeds
+  local speed=a.speeds or 5
+
+  if type(a.speeds)=="table" then
+    speed=a.speeds[a.along]
+  end
+
+  if a.counter>speed then
+    a.counter=0
+
+    a.along+=1
+    if a.along>#a.sprites then
+
+     --restart or
+     -- stay on last frame
+     if a.looping then
+      a.along=1
+     else
+      a.along=#a.sprites
+     end
+    end
+  end
+  
+  a.sprite=a.sprites[a.along]
+ end
 end
 
 __gfx__
@@ -743,13 +830,13 @@ __map__
 0000011001100110011001100110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000100110011001100110011001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-01030000156000d40005000020000c300083000630003300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010c00001c350000001c350000001c350000002135021350213502135000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010300000f7000f7000d7000c7000b7000a7000870007700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0004000025a5028a6029a6029a6029a6028a6025a5022a40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-011000001335000000113500000011350000001835018350183500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000400000742006420054100441002410024000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-010400002d3402d3502b3602a3602836024360203501b35017340123300d330073200131001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0103000035670296701b6631b6631b653106431014310043076330703307133000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0104000025a0028a0029a0029a0029a0028a0025a0022a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+011000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010400000740006400054000440002400024000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010400002d3002d3002b3002a3002830024300203001b30017300123000d300073000130001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0103000035600296001b6031b6031b603106031010310003076030700307103000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010500001f624000001a6001a6251d600000001f600000001d62500000000001f624000000000000000000001f624000001a6001a6251d600000001f600000001d62500000000001f62400000000000000000000
 01040000286410c00115651166510d641100331462311013106130c0130b613000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010c0000396550a053000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
