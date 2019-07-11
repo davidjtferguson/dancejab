@@ -184,9 +184,8 @@ function detectinputs(av)
  --jab
  if btnp(🅾️,av.no) then
   sfx(9+flr(rnd(2)))
-  sfx(9+flr(rnd(2)))
   av.state="jab"
-  av.anim=createanim({72,74,76}, {3,1,3})
+  av.anim=createanim({72,74,76},{3,1,3},false)
   av.statetimer=av.jabframes
   createhitbox(av.jabwidth,av.jabheight,av)
  end
@@ -257,11 +256,11 @@ function updateav(av)
   end
  elseif av.state=="jab" then
   if av.statetimer==0 then
+   av.anim=createanim(100)
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
  elseif av.state=="jablag" then
-  av.anim=createanim(100)
   av.xvel=0
  elseif av.state=="won" then
   av.xvel=0
@@ -324,13 +323,13 @@ function hitboxcollision(av)
      sfx(12)
     end
 
-    av.anim=createanim({108,110},{10,1},false)
+    av.anim=createanim({108,110},{6,1},false)
 
     updatescore(av)
-    
+
     av.state="dead"
     av.statetimer=90
-    
+
     del(hitboxes,box)
    end
   end
@@ -383,8 +382,16 @@ function updatehitbox(box)
    --hitboxes colided,
    -- seperate avs
    -- (should be generic...)
+   
+   p1.anim=createanim(106)
+   p2.anim=createanim(106)
    p1.xvel=-1
    p2.xvel=1
+   
+   --...or could just visually remove it
+   --todo:should have some sparks or something
+   del(hitboxes,box)
+   del(hitboxes,otherbox)
   end
  end 
 end
