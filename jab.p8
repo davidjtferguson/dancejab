@@ -62,7 +62,6 @@ function createav(x,flipped)
   xvel=0,
   y=96,
   yvel=0,
-  animt=createanimt(64,15,2),
   anim=createanim({64,66,68,70}, 6),
   flipped=flipped,
   state="none",
@@ -186,6 +185,7 @@ function detectinputs(av)
   sfx(9+flr(rnd(2)))
   sfx(9+flr(rnd(2)))
   av.state="jab"
+  av.anim=createanim({72,74,76}, {3,1,3})
   av.statetimer=av.jabframes
   createhitbox(av.jabwidth,av.jabheight,av)
  end
@@ -231,8 +231,6 @@ function updateav(av)
    _init()
   end
 
-  resetanim(av.animt,64,6,4,false)
-
   --walking
   if btn(⬅️,av.no) then
    av.xvel-=av.xacc
@@ -251,26 +249,23 @@ function updateav(av)
   end
  elseif av.state=="roll" then
   if facingforward(av) then
-   resetanim(av.animt,96,av.rollframes,1,true)
+   av.anim=createanim(96)
   else
-   resetanim(av.animt,98,av.rollframes,1,true)
+   av.anim=createanim(98)
   end
  elseif av.state=="jab" then
-  resetanim(av.animt,74,av.jabframes/3,3,false)
-  
   if av.statetimer==0 then
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
  elseif av.state=="jablag" then
-  resetanim(av.animt,100,1,1,true)
+  av.anim=createanim(100)
   av.xvel=0
  elseif av.state=="won" then
-  resetanim(av.animt,168,6,4,false)
   av.xvel=0
  elseif av.state=="dead" then
   --todo:sort specific sprite
-  resetanim(av.animt,110,1,1,true)
+  av.anim=createanim(110)
   
   --stagger away?
   -- undecided. cheap fix for
@@ -286,7 +281,7 @@ function updateav(av)
   end
  elseif av.state=="ringout" then
   --todo:sort specific sprite
-  resetanim(av.animt,192,1,1,true)
+  av.anim=createanim(192)
 
   av.yvel+=gravity
   av.xvel*=0.8
@@ -297,10 +292,13 @@ function updateav(av)
  end
  
  if av.statetimer==0 then
+  if av.state!="none" then
+   av.anim=createanim({64,66,68,70}, 6)
+  end
+
   av.state="none"
  end
 
- updateanimt(av.animt)
  updateanim(av.anim)
 
  av.x+=av.xvel
@@ -345,9 +343,7 @@ function updatescore(av)
    announce="player 2 wins!!"
    sfx(3)
   end
-  p2.state="won"
-  p2.statetimer=90
- 
+  setwin(p2)
  else
   p1.score+=1
   
@@ -355,9 +351,14 @@ function updatescore(av)
    announce="player 1 wins!!"
    sfx(3)
   end
-  p1.state="won"
-  p1.statetimer=90
+  setwin(p1)
  end
+end
+
+function setwin(av)
+  av.state="won"
+  av.anim=createanim({168,170,172,174}, 6)
+  av.statetimer=90
 end
 
 function updatehitbox(box)
@@ -397,7 +398,7 @@ function _draw()
  pal(12,8)
  pal(1,2)
  
- spr(p2.animt.sprite,p2.x,p2.y,2,2,p2.flipped)
+ spr(p2.anim.sprite,p2.x,p2.y,2,2,p2.flipped)
 
  pal()
  palt(0,false)
@@ -477,89 +478,54 @@ end
 -->8
 --animations
 
-function createanimt(bs,sd,sprs)
- local t={
-  --animation specifics
-  basesprite=bs,
-  speed=sd,
-  sprites=sprs,
-
-  --variables
-  sprite=bs,
-  along=0,
-  counter=0
- }
- return t
-end
-
-function resetanim(t,bs,sd,sprs,reset)
- t.basesprite=bs
- t.speed=sd
- t.sprites=sprs
-
- if reset then
-  t.sprite=bs
-  t.along=0
-  t.counter=0
- end
-end
-
-function updateanimt(t)
- t.counter+=1
- 
- --double width sprites
- t.along=flr(t.counter/t.speed)
- t.along*=2
-
- if t.counter>=
-    t.speed*t.sprites then
-  t.along=0
-  t.counter=0
- end
- 
- t.sprite=t.basesprite+t.along
-end
-
 --can pass in singular sprite and speed
 -- or sprites and one speed
 function createanim(sprites,speeds)
+ local s=sprites
+ if type(sprites)=="table" then
+  s=sprites[1]
+ end
+
  local t={
   --animation specifics
   speeds=speeds,
   sprites=sprites,
 
   --variables
-  sprite=sprites[1],
+  sprite=s,
   along=1,
   counter=0
  }
  return t
 end
 
---todo:cope with single sprite
+--copes with single sprite
 -- and single speed
 function updateanim(a)
- a.counter+=1
+ if type(a.sprites)=="table" then
+  a.counter+=1
 
- local speed=1
+  --cope with no speed,
+  -- a consistent number speed
+  -- or a table of different speeds
+  local speed=a.speeds or 5
 
- if type(a.speeds)=="number" then
-  speed=a.speeds
- else
-  speed=a.speeds[a.along]
- end
-
- if a.counter>=
-    speed then
-  a.counter=0
-
-  a.along+=1
-  if a.along>#a.sprites then
-   a.along=1
+  if type(a.speeds)=="table" then
+    speed=a.speeds[a.along]
   end
+
+  if a.counter>
+      speed then
+    a.counter=0
+
+    a.along+=1
+    if a.along>#a.sprites then
+    a.along=1
+    end
+  end
+  
+  a.sprite=a.sprites[a.along]
  end
- 
- a.sprite=a.sprites[a.along]
 end
 
 __gfx__
