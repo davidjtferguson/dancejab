@@ -1,17 +1,18 @@
-Idle: 64, 66, 68 + 70. even timing. each frame is active for 6 frames. if I can edit this timing that would be ace.
-Jab: 72 (3 frames) > 74 > 76 (3 frames). think of it like an animation sandwhich. the start and end have action frames.
-Dash Right: 96
-Dash left: 98
-Dash Recovery: 100
-Clink: 106
-Hit: 108
-Hit Recovery: 110
+Idle (done): 64, 66, 68 + 70. even timing. each frame is active for 6 frames. if I can edit this timing that would be ace.
+Jab (done): 72 (3 frames) > 74 > 76 (3 frames). think of it like an animation sandwhich. the start and end have action frames.
+Dash Right (done): 96
+Dash left (done): 98
+Dash Recovery (done): 100
+Clink (done): 106
+Falling (done): 192, 194
+
+get hit: 108
+been hit Recovery: 110
 Walk Fwd: 128, 130, 132, 134
 Walk Bck: 136, 138, 140, 142
-Lose: 160, 162, 164, 166
-Victory: 168, 170, 172, 174
-Falling: 192, 194
-Bump: 196
+Lose the whole thing: 160, 162, 164, 166
+Victory over the whole thing: 168, 170, 172, 174
+Bump - dash into someone: 196
 Push: 198 > 200
 Pushed: 202
 
