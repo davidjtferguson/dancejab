@@ -16,6 +16,7 @@ function createav(x,flipped)
   rollframes=5,
   jabframes=7,
   jablagframes=10,
+  hitstunframes=10,
   
   --movement limits
   -- in pixels/frame
@@ -66,6 +67,7 @@ function createav(x,flipped)
   flipped=flipped,
   state="none",
   statetimer=0,
+  hitpoints=3,
  }
  add(avs,av)
  return av
@@ -84,11 +86,9 @@ function createhitbox(w,h,av)
  return box
 end
 
---todo: remove _init call
--- & put music(0) in init
---music(0)
-
 function _init()
+ music(0)
+
  --duped in draw,
  -- just for first frame...	
  palt(0,false)
@@ -102,7 +102,11 @@ function _init()
  --for debugging
  drawhitboxes=true
 
- reset()
+ resetmatch()
+end
+
+function resetmatch()
+ resetround()
  
  --vars
  announce=""
@@ -110,7 +114,7 @@ function _init()
  p2.score=0
 end
 
-function reset()
+function resetround()
  if p1 then
   scorep1=p1.score
   scorep2=p2.score
@@ -229,7 +233,7 @@ function updateav(av)
   -- (after round end pause)
   -- and hard reset
   if av.score==firstto then
-   _init()
+   resetmatch()
   end
 
   --walking
@@ -262,27 +266,22 @@ function updateav(av)
   end
  elseif av.state=="jablag" then
   av.xvel=0
+ elseif av.state=="hitstun" then
+  --... maybe not needed?
  elseif av.state=="won" then
   av.xvel=0
  elseif av.state=="dead" then
-  --stagger away?
-  -- undecided. cheap fix for
-  -- repeated bumping sfx play
-  if av.flipped then
-   av.xvel=0.5
-  else
-   av.xvel=-0.5
-  end
-  
+  av.xvel*=0.9
+
   if av.statetimer==0 then
-   reset()
+   resetround()
   end
  elseif av.state=="ringout" then
   av.yvel+=gravity
-  av.xvel*=0.8
+  av.xvel*=0.9
   
   if av.statetimer==0 then
-   reset()
+   resetround()
   end
  end
  
@@ -317,18 +316,32 @@ function hitboxcollision(av)
 
    if aabbcollision(globalbox(av,av.hurtbox),box) then
     --been punched!
-    if av.score==(firstto-1) then
-     sfx(15)
-    else
-     sfx(12)
-    end
+    av.hitpoints-=1
 
     av.anim=createanim({108,110},{6,1},false)
 
-    updatescore(av)
+    av.state="hitstun"
+    av.statetimer=av.hitstunframes
 
-    av.state="dead"
-    av.statetimer=90
+    if av.flipped then
+     av.xvel=1.5
+    else
+     av.xvel=-1.5
+    end
+
+    --final hit sfx vs normal hit sfx
+    if av.score==(firstto-1) then
+      sfx(15)
+    else
+      sfx(12)
+    end
+
+    if av.hitpoints==0 then
+      updatescore(av)
+
+      av.state="dead"
+      av.statetimer=90
+    end
 
     del(hitboxes,box)
    end
@@ -837,7 +850,7 @@ __sfx__
 010400000740006400054000440002400024000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010400002d3002d3002b3002a3002830024300203001b30017300123000d300073000130001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010c000030620306151b6031b6031b603106031010310003076030700307103000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-010500001f624000001a6001a6251d600000001f600000001d62500000000001f624000000000000000000001f624000001a6001a6251d600000001f600000001d62500000000001f62400000000000000000000
+010500201f624000001a6001a6251d600000001f600000001d62500000000001f624000000000000000000001f624000001a6001a6251d600000001f600000001d62500000000001f62400000000000000000000
 01040000286410c00115651166510d641100331462311013106130c0130b613000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010c0000396550a053000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010900002d6550a0530a0130000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
