@@ -7,13 +7,13 @@ __lua__
 test=""
 
 --avatar
-function createav(x,flipped)
+function createav(x,name,flipped)
  local av={
   --constants, play around with
  
   --how long each action lasts
   -- in frames at 60fps
-  rollframes=5,
+  dashframes=5,
   jabframes=7,
   jablagframes=10,
   hitstunframes=10,
@@ -22,11 +22,11 @@ function createav(x,flipped)
   -- in pixels/frame
   xacc=0.4,
   xmaxvel=.7,
-  xrollmaxvel=1.8,
+  xdashmaxvel=1.8,
   
   --xvel is multiplied by this
   -- each frame there's no input
-  -- and not rolling
+  -- and not dashing
   xdecellrate=.7,
   
   --xvel is multiplied by this
@@ -63,6 +63,8 @@ function createav(x,flipped)
   animwalkforward=createanim({128,130,132,134},5),
   animwalkback=createanim({136,138,140,142},5),
 
+  hitpoints=3,
+ 
   --vars, don't edit
   x=x,
   xvel=0,
@@ -71,7 +73,7 @@ function createav(x,flipped)
   flipped=flipped,
   state="none",
   statetimer=0,
-  hitpoints=3,
+  name=name,
  }
  av.anim=av.animidle
  add(avs,av)
@@ -128,13 +130,17 @@ function resetround()
  avs={}
  hitboxes={}
 
- p1=createav(24)
+ p1=createav(24,"red")
  p1.no=0
  p1.score=scorep1
  
- p2=createav(88,true)
+ p2=createav(88,"blue",true)
  p2.no=1
  p2.score=scorep2
+
+ --remember opponent avatar
+ p1.oav=p2
+ p2.oav=p1
 end
 
 function _update60()
@@ -148,8 +154,8 @@ function _update60()
  end
  
  if aabbcollision(
-     globalbox(p1,p1.pushbox),
-     globalbox(p2,p2.pushbox))
+    globalbox(p1,p1.pushbox),
+    globalbox(p2,p2.pushbox))
  then
   sfx(11)
 
@@ -167,26 +173,26 @@ function _update60()
 end
 
 function detectinputs(av)
- -- roll triggered
+ --dash triggered
  if btnp(❎,av.no) then
   sfx(8)
-  av.state="roll"
-  av.statetimer=av.rollframes
+  av.state="dash"
+  av.statetimer=av.dashframes
 
-  -- roll direction held or facing
+  --dash direction held or facing
   if btn(⬅️,av.no) then
-   --roll to the left
-   av.xvel=-av.xrollmaxvel
+   --dash to the left
+   av.xvel=-av.xdashmaxvel
   elseif btn(➡️,av.no) and
          btnp(❎,av.no) then
-   --roll to the right
-   av.xvel=av.xrollmaxvel
+   --dash to the right
+   av.xvel=av.xdashmaxvel
   elseif av.flipped then
-   --roll to the left
-   av.xvel=-av.xrollmaxvel
+   --dash to the left
+   av.xvel=-av.xdashmaxvel
   else
-   --roll to the right
-   av.xvel=av.xrollmaxvel
+   --dash to the right
+   av.xvel=av.xdashmaxvel
   end
  end
  
@@ -229,7 +235,7 @@ function updateav(av)
  
  --can only act in some states
  if av.state=="none" or
-    av.state=="roll" then
+    av.state=="dash" then
   detectinputs(av)
  end
  
@@ -264,7 +270,7 @@ function updateav(av)
   if av.xvel<(-av.xmaxvel) then
    av.xvel=-av.xmaxvel
   end
- elseif av.state=="roll" then
+ elseif av.state=="dash" then
   if facingforward(av) then
    av.anim=createanim(96)
   else
@@ -359,31 +365,16 @@ end
 
 --pass in av that just died
 function updatescore(av)
- if av.no==0 then
-  p2.score+=1
-  
-  if p2.score==firstto then
-   announce="player 2 wins!!"
-   sfx(0)
-   p1.anim=createanim({160,162,164,166},{6,3,10,10})
-  end
-  setwin(p2)
- else
-  p1.score+=1
-  
-  if p1.score==firstto then
-   announce="player 1 wins!!"
-   sfx(0)
-   p2.anim=createanim({160,162,164,166},{6,3,10,10})
-  end
-  setwin(p1)
+ av.oav.score+=1
+ 
+ if av.oav.score==firstto then
+  announce=av.oav.name.." wins!"
+  sfx(0)
+  av.anim=createanim({160,162,164,166},{6,3,10,10})
  end
-end
-
-function setwin(av)
-  av.state="won"
-  av.anim=createanim({168,170,172,174},6)
-  av.statetimer=90
+ av.oav.state="won"
+ av.oav.anim=createanim({168,170,172,174},6)
+ av.oav.statetimer=90
 end
 
 function updatehitbox(box)
@@ -437,14 +428,11 @@ function _draw()
  palt(0,false)
  palt(11,true)
 	
- --drawbox(p1,p1.pushbox,5)
- --drawbox(p1,p1.hurtbox,9)
-
  if drawhitboxes then
   for box in all(hitboxes) do
     rectfill(box.x,box.y,
-    box.x+box.width,
-    box.y+box.height,12)
+     box.x+box.width,
+     box.y+box.height,12)
   end
  end
  
@@ -454,18 +442,14 @@ function _draw()
  print(announce,30,64)
 
  --debug info
+ --drawlocalbox(p1,p1.pushbox,5)
+ --drawlocalbox(p1,p1.hurtbox,9)
+
  print(test,0,0)
 end
 
 -->8
 --collisions
-
-function drawbox(av,box,col)
- rectfill(av.x+box.x,
-  av.y+p1.hurtbox.y,
-  av.x+box.x+box.width,
-  av.y+box.y+box.height,col)
-end
 
 --convert box from av local
 -- to global coords
@@ -476,6 +460,14 @@ function globalbox(av,box)
   width=box.width,
   height=box.height,
  }
+end
+
+function drawlocalbox(av,box,col)
+ local lbox=globalbox(av,box)
+ rectfill(lbox.x,
+  lbox.y,
+  lbox.x+lbox.width,
+  lbox.y+lbox.height,col)
 end
 
 --only in x axis
