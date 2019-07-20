@@ -58,10 +58,20 @@ function createav(x,name,flipped)
   jabwidth=6,
   jabheight=8,
   
-  --create animations
+  --create animations for this av
   animidle=createanim({224,226,228,230,232,234,236,238},5),
   animwalkforward=createanim({128,130,132,134},5),
   animwalkback=createanim({136,138,140,142},5),
+  animdashforward=createanim(96),
+  animdashback=createanim(98),
+  animjab=createanim({72,74,76},{3,6,1},false),
+  animringout=createanim({192,194},6,false),
+  animjablag=createanim({78,44,100},{3,3,5},false),
+  animhitstun=createanim(108),
+  animlostround=createanim({108,110},{6,1},false),
+  animlostmatch=createanim({160,162,164,166},{6,3,10,10}),
+  animvictory=createanim({168,170,172,174},6),
+  animclank=createanim(106),
 
   hitpoints=3,
  
@@ -200,7 +210,7 @@ function detectinputs(av)
  if btnp(🅾️,av.no) then
   sfx(9+flr(rnd(2)))
   av.state="jab"
-  av.anim=createanim({72,74,76},{3,6,1},false)
+  av.anim=av.animjab
   av.statetimer=av.jabframes
   createhitbox(av.jabwidth,av.jabheight,av)
  end
@@ -222,7 +232,7 @@ function updateav(av)
    --don't want double death
    if av.state!="dead" then
     sfx(15)
-    av.anim=createanim({192,194},6,false)
+    av.anim=av.animringout
     updatescore(av)
     av.statetimer=90
    end
@@ -272,13 +282,13 @@ function updateav(av)
   end
  elseif av.state=="dash" then
   if facingforward(av) then
-   av.anim=createanim(96)
+   av.anim=av.animdashforward
   else
-   av.anim=createanim(98)
+   av.anim=av.animdashback
   end
  elseif av.state=="jab" then
   if av.statetimer==0 then
-   av.anim=createanim({78,44,100},{3,3,5},false)
+   av.anim=av.animjablag
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
@@ -332,7 +342,7 @@ function hitboxcollision(av)
     --been punched!
     av.hitpoints-=1
 
-    av.anim=createanim(108)
+    av.anim=av.animhitstun
 
     av.state="hitstun"
     av.statetimer=av.hitstunframes
@@ -351,7 +361,7 @@ function hitboxcollision(av)
     end
 
     if av.hitpoints==0 then
-     av.anim=createanim({108,110},{6,1},false)
+     av.anim=av.animlostround
      updatescore(av)
      av.state="dead"
      av.statetimer=90
@@ -370,10 +380,10 @@ function updatescore(av)
  if av.oav.score==firstto then
   announce=av.oav.name.." wins!"
   sfx(0)
-  av.anim=createanim({160,162,164,166},{6,3,10,10})
+  av.anim=av.animlostmatch
  end
  av.oav.state="won"
- av.oav.anim=createanim({168,170,172,174},6)
+ av.oav.anim=av.animvictory
  av.oav.statetimer=90
 end
 
@@ -397,8 +407,8 @@ function updatehitbox(box)
    -- seperate avs
    -- (should be generic...)
    
-   p1.anim=createanim(106)
-   p2.anim=createanim(106)
+   p1.anim=p1.animclank
+   p2.anim=p2.animclank
    p1.xvel=-1
    p2.xvel=1
    
@@ -525,7 +535,8 @@ function createanim(sprites,speeds,looping)
   --variables
   sprite=s,
   along=1,
-  counter=0
+  counter=0,
+  t=time(),
  }
  return t
 end
@@ -534,6 +545,19 @@ end
 -- and single speed
 function updateanim(a)
  if type(a.sprites)=="table" then
+
+  --if some small amount of time
+  -- has passed since last update,
+  -- assume anim was interupted
+  -- so restart anim
+  -- note:may go weird after 9 hours...
+  if time()-a.t > 1/30 then
+   a.counter=0
+   a.along=1
+  end
+
+  a.t = time()
+
   a.counter+=1
 
   --cope with no speed,
