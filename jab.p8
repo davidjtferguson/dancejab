@@ -58,17 +58,22 @@ function createav(x,flipped)
   jabwidth=6,
   jabheight=8,
   
+  --create animations
+  animidle=createanim({224,226,228,230,232,234,236,238},5),
+  animwalkforward=createanim({128,130,132,134},5),
+  animwalkback=createanim({136,138,140,142},5),
+
   --vars, don't edit
   x=x,
   xvel=0,
   y=96,
   yvel=0,
-  anim=createanim({224,226,228,230,232,234,236,238},5),
   flipped=flipped,
   state="none",
   statetimer=0,
   hitpoints=3,
  }
+ av.anim=av.animidle
  add(avs,av)
  return av
 end
@@ -237,12 +242,19 @@ function updateav(av)
   end
 
   --walking
+  if facingforward(av) then
+   av.anim=av.animwalkforward
+  else
+   av.anim=av.animwalkback
+  end
+
   if btn(⬅️,av.no) then
    av.xvel-=av.xacc
   elseif btn(➡️,av.no) then
    av.xvel+=av.xacc
   else
    av.xvel*=av.xdecellrate
+   av.anim=av.animidle
   end
   
   if av.xvel>av.xmaxvel then
@@ -286,10 +298,6 @@ function updateav(av)
  end
  
  if av.statetimer==0 then
-  if av.state!="none" then
-   av.anim=createanim({224,226,228,230,232,234,236,238},5)
-  end
-
   av.state="none"
  end
 
@@ -318,7 +326,7 @@ function hitboxcollision(av)
     --been punched!
     av.hitpoints-=1
 
-    av.anim=createanim({108,110},{6,1},false)
+    av.anim=createanim(108)
 
     av.state="hitstun"
     av.statetimer=av.hitstunframes
@@ -337,10 +345,10 @@ function hitboxcollision(av)
     end
 
     if av.hitpoints==0 then
-      updatescore(av)
-
-      av.state="dead"
-      av.statetimer=90
+     av.anim=createanim({108,110},{6,1},false)
+     updatescore(av)
+     av.state="dead"
+     av.statetimer=90
     end
 
     del(hitboxes,box)
@@ -357,6 +365,7 @@ function updatescore(av)
   if p2.score==firstto then
    announce="player 2 wins!!"
    sfx(0)
+   p1.anim=createanim({160,162,164,166},{6,3,10,10})
   end
   setwin(p2)
  else
@@ -365,6 +374,7 @@ function updatescore(av)
   if p1.score==firstto then
    announce="player 1 wins!!"
    sfx(0)
+   p2.anim=createanim({160,162,164,166},{6,3,10,10})
   end
   setwin(p1)
  end

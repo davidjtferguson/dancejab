@@ -5,13 +5,13 @@ Dash left (done): 98
 Dash Recovery (done): 100
 Clink (done): 106
 Falling (done): 192, 194
+Walk Fwd (done): 128, 130, 132, 134
+Walk Bck (done): 136, 138, 140, 142
+get hit (done): 108
+Lose the whole thing (done): 160, 162, 164, 166
+Victory over the whole thing (done): 168, 170, 172, 174
 
-get hit: 108
 been hit Recovery: 110
-Walk Fwd: 128, 130, 132, 134
-Walk Bck: 136, 138, 140, 142
-Lose the whole thing: 160, 162, 164, 166
-Victory over the whole thing: 168, 170, 172, 174
 Bump - dash into someone: 196
 Push: 198 > 200
 Pushed: 202
