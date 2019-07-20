@@ -353,18 +353,14 @@ function hitboxcollision(av)
      av.xvel=-1.5
     end
 
-    --final hit sfx vs normal hit sfx
-    if av.score==(firstto-1) then
-      sfx(15)
-    else
-      sfx(12)
-    end
-
     if av.hitpoints==0 then
+      sfx(14)
      av.anim=av.animlostround
      updatescore(av)
      av.state="dead"
      av.statetimer=90
+    else
+     sfx(12)
     end
 
     del(hitboxes,box)
