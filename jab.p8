@@ -116,9 +116,6 @@ function _init()
  firstto=3
  gravity=0.15
 
- --for debugging
- drawhitboxes=true
-
  resetmatch()
 end
 
@@ -423,6 +420,8 @@ function _draw()
  
  spr(p1.anim.sprite,p1.x,p1.y,2,2,p1.flipped)
 
+ drawavhitboxes(p1)
+ 
  pal(8,12)
  pal(2,13)
  pal(12,8)
@@ -430,17 +429,11 @@ function _draw()
  
  spr(p2.anim.sprite,p2.x,p2.y,2,2,p2.flipped)
 
+ drawavhitboxes(p2)
+ 
  pal()
  palt(0,false)
  palt(11,true)
-	
- if drawhitboxes then
-  for box in all(hitboxes) do
-    rectfill(box.x,box.y,
-     box.x+box.width,
-     box.y+box.height,12)
-  end
- end
  
  --game info
  print(p1.score,5,5,8)
@@ -451,7 +444,28 @@ function _draw()
  --drawlocalbox(p1,p1.pushbox,5)
  --drawlocalbox(p1,p1.hurtbox,9)
 
+ -- for box in all(hitboxes) do
+ --  rectfill(box.x,box.y,
+ --   box.x+box.width,
+ --   box.y+box.height,3)
+ -- end
+ 
  print(test,0,0)
+end
+
+function drawavhitboxes(av)
+ for box in all(hitboxes) do
+  if box.av == av then
+
+   --p2 fist is visually off by a pixel
+   -- for some reason??
+   local boxx = box.x
+   if av == p2 then
+    boxx-=1
+   end
+   spr(2,boxx,box.y,1,1,av.flipped)
+  end
+ end
 end
 
 -->8
