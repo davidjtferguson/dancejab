@@ -414,8 +414,8 @@ function updatehitbox(box)
 end
 
 function _draw()
- cls(1)
- 
+ cls()
+ drawbackground()
  map(0,0,0,0,16,16)
  
  spr(p1.anim.sprite,p1.x,p1.y,2,2,p1.flipped)
@@ -451,6 +451,30 @@ function _draw()
  -- end
  
  print(test,0,0)
+end
+
+--adapted form
+-- https://twitter.com/lexaloffle/status/1149043190218891264
+move=0
+movevel=0
+moveadd=0.001
+
+function drawbackground()
+ movevel+=moveadd
+ move+=movevel
+ 
+ if abs(movevel)>0.1 then
+  moveadd*=-1
+ end
+
+	for z=32,1,-1 do
+	 for x=-32,32 do
+	  y=cos(x/16+z/32+move/2)*50-80-move*50   
+	  sx,r,c=64+x*64/z,8/z,circfill
+	  c(sx,64+y/z,r,12+(x+z*2)%4)
+	  c(sx,64+-y/z,r,1)
+	 end
+	end
 end
 
 function drawavhitboxes(av)
