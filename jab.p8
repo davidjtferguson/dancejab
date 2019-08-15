@@ -439,17 +439,23 @@ function _draw()
  palt(11,true)
  
  --game info
- print(p1.score,5,5,8)
- print(p2.score,120,5,12)
-
  print(p1.hitpoints,5,13,8)
  print(p2.hitpoints,120,13,12)
 
- -- max number of games with firstto
+ --lights showing score
  local maxgames=firstto*2-1
 
  for i=1,maxgames do
-  spr(26,i*7+(57-(maxgames/2)*7),5)
+  local lightspr=26
+  if i<=p1.score then
+   lightspr=10
+  end
+
+  if i>(maxgames-p2.score) then
+   lightspr=11
+  end
+
+  spr(lightspr,i*7+(57-(maxgames/2)*7),1)
  end
 
  print(announce,30,64)
