@@ -73,7 +73,7 @@ function createav(x,name,flipped)
   animvictory=createanim({168,170,172,174},6),
   animclank=createanim(106),
 
-  hitpoints=3,
+  hitpoints=maxhitpoints,
  
   --vars, don't edit
   x=x,
@@ -112,8 +112,11 @@ function _init()
  palt(11,true)
 
  --constants
- --how many wins for a set
+ --wins for a set
  firstto=3
+
+ --hitpoints in a round
+ maxhitpoints=3
  gravity=0.15
 
  resetmatch()
@@ -438,6 +441,17 @@ function _draw()
  --game info
  print(p1.score,5,5,8)
  print(p2.score,120,5,12)
+
+ print(p1.hitpoints,5,13,8)
+ print(p2.hitpoints,120,13,12)
+
+ -- max number of games with firstto
+ local maxgames=firstto*2-1
+
+ for i=1,maxgames do
+  spr(26,i*7+(57-(maxgames/2)*7),5)
+ end
+
  print(announce,30,64)
 
  --debug info
@@ -449,8 +463,8 @@ function _draw()
  --   box.x+box.width,
  --   box.y+box.height,3)
  -- end
- 
- print(test,0,0)
+
+ print(test,0,0,4)
 end
 
 --adapted form
