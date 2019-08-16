@@ -115,6 +115,8 @@ function _init()
  --wins for a set
  firstto=3
 
+ hitknockback=1.5
+
  --hitpoints in a round
  maxhitpoints=3
  gravity=0.15
@@ -348,13 +350,13 @@ function hitboxcollision(av)
     av.statetimer=av.hitstunframes
 
     if av.flipped then
-     av.xvel=1.5
+     av.xvel=hitknockback
     else
-     av.xvel=-1.5
+     av.xvel=-hitknockback
     end
 
     if av.hitpoints==0 then
-      sfx(14)
+     sfx(14)
      av.anim=av.animlostround
      updatescore(av)
      av.state="dead"
