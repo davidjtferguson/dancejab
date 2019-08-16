@@ -230,8 +230,9 @@ function updateav(av)
  else
   --on first ringout detection
   if av.state!="ringout" then
-  
-   --don't want double death
+   av.hitpoints=0
+
+   --prevent double death
    if av.state!="dead" then
     sfx(15)
     av.anim=av.animringout
