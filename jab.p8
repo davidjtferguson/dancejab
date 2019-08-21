@@ -16,7 +16,8 @@ function createav(x,name,flipped)
   dashframes=7,
   jabframes=7,
   jablagframes=10,
-  hitstunframes=10,
+  connectlagframes=10,
+  hitstunframes=8,
   
   --movement limits
   -- in pixels/frame
@@ -67,6 +68,7 @@ function createav(x,name,flipped)
   animjab=createanim({72,74,76},{3,6,1},false),
   animringout=createanim({192,194},6,false),
   animjablag=createanim({78,44,100},{3,3,5},false),
+  animconnectlag=createanim(7),
   animhitstun=createanim(108),
   animlostround=createanim({108,110},{6,1},false),
   animlostmatch=createanim({160,162,164,166},{6,3,10,10}),
@@ -297,8 +299,10 @@ function updateav(av)
   end
  elseif av.state=="jablag" then
   av.xvel=0
+ elseif av.state=="connectlag" then
+  --pause
  elseif av.state=="hitstun" then
-  --... maybe not needed?
+  --pause
  elseif av.state=="won" then
   av.xvel=0
  elseif av.state=="dead" then
@@ -342,13 +346,18 @@ function hitboxcollision(av)
   if box.pno!=av.no then
 
    if aabbcollision(globalbox(av,av.hurtbox),box) then
+    --other avatar pauses
+    av.oav.state="connectlag"
+    av.oav.statetimer=av.oav.connectlagframes
+    av.oav.anim=av.oav.animconnectlag
+    av.oav.xvel=0
+
     --been punched!
     av.hitpoints-=1
 
-    av.anim=av.animhitstun
-
     av.state="hitstun"
     av.statetimer=av.hitstunframes
+    av.anim=av.animhitstun
 
     if av.flipped then
      av.xvel=hitknockback
