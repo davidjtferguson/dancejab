@@ -106,9 +106,6 @@ function createhitbox(w,h,av)
 end
 
 function _init()
- currentupdate=updatestart
- currentdraw=drawstart
-
  music(0)
 
  --duped in draw,
@@ -127,6 +124,9 @@ function _init()
  gravity=0.15
 
  resetmatch()
+ 
+ currentupdate=updatestart
+ currentdraw=drawstart
 end
 
 function resetmatch()
@@ -136,6 +136,11 @@ function resetmatch()
  announce=""
  p1.score=0
  p2.score=0
+
+ --todo:back to menu option
+ initcountdown()
+ currentupdate=updatecountdown
+ currentdraw=drawcountdown
 end
 
 function resetround()
@@ -160,14 +165,41 @@ function resetround()
  p2.oav=p1
 end
 
+function initcountdown()
+ ct=0
+ xcorner=72
+ countdownno=3
+end
+
 function _update60()
  currentupdate()
 end
 
 function updatestart()
  if btn()!=0 then
+  initcountdown()
+  currentupdate=updatecountdown
+  currentdraw=drawcountdown
+ end
+end
+
+function updatecountdown() 
+ updateanim(p1.anim)
+ updateanim(p2.anim)
+
+ ct+=4
+ 
+ if ct>=128 then
+  ct=0
+  xcorner+=8
+  countdownno-=1
+ end
+
+ if countdownno==0 then
+  --show fight
   currentupdate=updategame
   currentdraw=drawgame
+  ct=-45
  end
 end
 
@@ -461,6 +493,14 @@ function drawstart()
  print("press any to start",0,100)
 end
 
+function drawcountdown()
+ drawgame()
+
+ sspr(xcorner,16,8,8,
+  ct/2,ct/2,
+  128-ct,128-ct)
+end
+
 function drawgame()
  --drawbackground()
  map(0,0,0,0,16,16)
@@ -500,6 +540,14 @@ function drawgame()
   end
 
   spr(lightspr,i*7+(57-(maxgames/2)*7),1)
+ end
+
+ --draw fight sprite for first
+ -- -ct frames of fight
+ -- set in updatecountdown
+ if ct<0 then
+  spr(12,50,50,4,2)
+  ct+=1
  end
 
  print(announce,30,64)
