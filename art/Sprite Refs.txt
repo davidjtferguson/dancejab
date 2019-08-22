@@ -28,4 +28,6 @@ Final hit - 14
 Fall Off - 15
 
 Davbo sfx to be fixed up:
-full game victory chime - 0
+full game victory chime - 00
+when number appears in 3,2,1 - 02
+when FIGHT appears - 03
