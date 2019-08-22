@@ -106,6 +106,9 @@ function createhitbox(w,h,av)
 end
 
 function _init()
+ currentupdate=updatestart
+ currentdraw=drawstart
+
  music(0)
 
  --duped in draw,
@@ -158,33 +161,44 @@ function resetround()
 end
 
 function _update60()
- --inputs
- for av in all(avs) do
-  updateav(av)
- end
- 
- for box in all(hitboxes) do
-  updatehitbox(box)
- end
- 
- if aabbcollision(
-    globalbox(p1,p1.pushbox),
-    globalbox(p2,p2.pushbox))
- then
-  sfx(11)
+ currentupdate()
+end
 
-  --if -1
-  -- flips velocity, so walking
-  -- is strong against dashing
-  -- at gaining space.
-  p1.xvel*=p1.xcollisionmult
-  p2.xvel*=p2.xcollisionmult
-  
-  --bounce off eachother
-  p1.xvel-=0.5
-  p2.xvel+=0.5
+function updatestart()
+ if btn()!=0 then
+  currentupdate=updategame
+  currentdraw=drawgame
  end
 end
+
+function updategame()
+  --inputs
+  for av in all(avs) do
+   updateav(av)
+  end
+  
+  for box in all(hitboxes) do
+   updatehitbox(box)
+  end
+  
+  if aabbcollision(
+     globalbox(p1,p1.pushbox),
+     globalbox(p2,p2.pushbox))
+  then
+   sfx(11)
+
+   --if -1
+   -- flips velocity, so walking
+   -- is strong against dashing
+   -- at gaining space.
+   p1.xvel*=p1.xcollisionmult
+   p2.xvel*=p2.xcollisionmult
+   
+   --bounce off eachother
+   p1.xvel-=0.5
+   p2.xvel+=0.5
+  end
+ end
 
 function detectinputs(av)
  --dash triggered
@@ -430,6 +444,24 @@ end
 
 function _draw()
  cls()
+ 
+ currentdraw()
+
+ print(test,0,0,4)
+end
+
+function drawstart()
+ sspr(0,50,16,16,
+  10,40,32,32)
+
+ drawwithp2colours(drawp2start)
+
+ print("dancejab!",30,30)
+
+ print("press any to start",0,100)
+end
+
+function drawgame()
  --drawbackground()
  map(0,0,0,0,16,16)
  
@@ -437,18 +469,7 @@ function _draw()
 
  drawavhitboxes(p1)
  
- pal(8,12)
- pal(2,13)
- pal(12,8)
- pal(1,2)
- 
- spr(p2.anim.sprite,p2.x,p2.y,2,2,p2.flipped)
-
- drawavhitboxes(p2)
- 
- pal()
- palt(0,false)
- palt(11,true)
+ drawwithp2colours(drawp2)
  
  --game info
  --p1 health
@@ -492,8 +513,30 @@ function _draw()
  --   box.x+box.width,
  --   box.y+box.height,3)
  -- end
+end
 
- print(test,0,0,4)
+function drawp2start()
+ sspr(96,50,16,16,
+  66,42,32,32,true)
+end
+
+function drawp2()
+ spr(p2.anim.sprite,p2.x,p2.y,2,2,p2.flipped)
+
+ drawavhitboxes(p2)
+end
+
+function drawwithp2colours(drawing)
+ pal(8,12)
+ pal(2,13)
+ pal(12,8)
+ pal(1,2)
+ 
+ drawing()
+
+ pal()
+ palt(0,false)
+ palt(11,true)
 end
 
 --adapted form
