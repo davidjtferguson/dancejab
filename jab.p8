@@ -123,6 +123,8 @@ function _init()
  maxhitpoints=3
  gravity=0.15
 
+ mode="normal"
+
  resetmatch()
  
  currentupdate=updatestart
@@ -177,10 +179,25 @@ function _update60()
 end
 
 function updatestart()
- if btn()!=0 then
+ if btnp()!=0 then
+  currentupdate=updatemenu
+  currentdraw=drawmenu
+ end
+end
+
+function updatemenu()
+ if btnp(❎) or btnp(🅾️) then
   initcountdown()
   currentupdate=updatecountdown
   currentdraw=drawcountdown
+ 
+  if btnp(❎) then
+   mode="normal"
+  end
+
+  if btnp(🅾️) then
+   mode="sumo"
+  end
  end
 end
 
@@ -407,7 +424,9 @@ function hitboxcollision(av)
     av.oav.xvel=0
 
     --been punched!
-    av.hitpoints-=1
+    if mode!="sumo" then
+     av.hitpoints-=1
+    end
 
     av.state="hitstun"
     av.statetimer=av.hitstunframes
@@ -499,6 +518,16 @@ function drawstart()
  print("press any to start",20,100,7)
 end
 
+function drawmenu()
+ sspr(0,50,16,16,
+  10,40,32,32)
+
+ drawwithp2colours(drawp2start)
+
+ print("normal mode: ❎",20,100,7)
+ print("sumo mode: 🅾️",20,110,7)
+end
+
 function drawcountdown()
  drawgame()
 
@@ -531,6 +560,12 @@ function drawgame()
   rectfill(103+20-20*(p2.hitpoints/maxhitpoints),5,122,8,12)
  end
  spr(18,101,3,3,1)
+
+ --explain why health isn't going down
+ if mode=="sumo" then
+  print("sumo",7,5,7)
+  print("sumo",106,5,7)
+ end
 
  --lights showing score
  local maxgames=firstto*2-1
