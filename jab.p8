@@ -131,7 +131,7 @@ function _init()
  sstage=nil
 
  createstage("normal",0,0,24,96,88,96)
- createstage("small",128,0,172,96,198,96)
+ createstage("small",128,0,43,96,70,96)
 
  sstage=stages[ssid]
 
@@ -540,7 +540,6 @@ end
 
 function _draw()
  cls(1)
- camera(sstage.camerax,sstage.cameray)
  currentdraw()
  print(test,0,0,4)
 end
@@ -577,7 +576,7 @@ end
 function drawgame()
  --drawbackground()
  map(sstage.camerax/8,sstage.cameray/8,
-  sstage.camerax,sstage.cameray,
+  0,0,
   16,16)
  
  spr(p1.anim.sprite,p1.x,p1.y,2,2,p1.flipped)
@@ -745,7 +744,8 @@ function aabbcollision(a,b)
 end
 
 function checkavflagarea(av,f)
- return checkflagarea(av.x,av.y,av.width,av.height,f)
+ --check against the map we're drawing to the screen
+ return checkflagarea(av.x+sstage.camerax,av.y+sstage.cameray,av.width,av.height,f)
 end
 
 function checkflagarea(x,y,w,h,flag)
@@ -845,13 +845,13 @@ end
 
 function createstage(n,cx,cy,p1x,p1y,p2x,p2y)
  s={
-   name=n,
-   camerax=cx,
-   cameray=cy,
-   p1x=p1x,
-   p1y=p1y,
-   p2x=p2x,
-   p2y=p2y
+  name=n,
+  camerax=cx,
+  cameray=cy,
+  p1x=p1x,
+  p1y=p1y,
+  p2x=p2x,
+  p2y=p2y
  }
  add(stages,s)
 end
