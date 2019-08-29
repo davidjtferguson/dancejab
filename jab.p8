@@ -106,8 +106,6 @@ function createhitbox(w,h,av)
 end
 
 function _init()
- music(0)
-
  --duped in draw,
  -- just for first frame...	
  palt(0,false)
@@ -137,8 +135,18 @@ function _init()
 
  resetmatch()
  
+ music(16)
  currentupdate=updatestart
  currentdraw=drawstart
+
+ menuitem(1, "exit to menu", exittomenu)
+end
+
+function exittomenu()
+ resetmatch()
+ music(16)
+ currentupdate=updatemenu
+ currentdraw=drawmenu
 end
 
 function resetmatch()
@@ -178,6 +186,7 @@ function resetround()
 end
 
 function initcountdown()
+ music(0)
  ct=0
  ctvel=0
  xcorner=72
@@ -200,17 +209,20 @@ function updatemenu()
   currentupdate=updatestageselect
   currentdraw=drawstageselect
 
-  if btnp(❎) then
+  if btnp(🅾️) then
    mode="normal"
   end
 
-  if btnp(🅾️) then
+  if btnp(❎) then
    mode="sumo"
   end
  end
 end
 
 function updatestageselect()
+ updateanim(p1.anim)
+ updateanim(p2.anim)
+
  if btnp(0) or btnp(1) then
   if btnp(0) then
    ssid-=1
@@ -363,13 +375,6 @@ function updateav(av)
  end
  
  if av.state=="none" then
-  --check for winner
-  -- (after round end pause)
-  -- and hard reset
-  if av.score==firstto then
-   resetmatch()
-  end
-
   --walking
   if facingforward(av) then
    av.anim=av.animwalkforward
@@ -413,24 +418,27 @@ function updateav(av)
   --pause
  elseif av.state=="won" then
   av.xvel=0
- elseif av.state=="dead" then
-  av.xvel*=0.9
 
-  if av.statetimer==0 then
+  if av.statetimer==0 and av.score!=firstto then
    resetround()
   end
+ elseif av.state=="dead" then
+  av.xvel*=0.9
  elseif av.state=="ringout" then
   av.yvel+=gravity
   av.xvel*=0.9
-  
-  if av.statetimer==0 then
-   resetround()
-  end
  end
- 
- if av.statetimer==0 then
+
+ if av.statetimer==0 and (av.state!="won" and av.oav.state!="won") then
   av.state="none"
  end
+
+  --check for winner
+  -- (after round end pause)
+  -- and hard reset
+  if av.statetimer==0 and av.score==firstto and btnp()!=0 then
+   resetmatch()
+  end
 
  updateanim(av.anim)
 
@@ -496,8 +504,8 @@ function updatescore(av)
  av.oav.score+=1
  
  if av.oav.score==firstto then
-  announce=av.oav.name.." wins!"
-  sfx(0)
+  announce=av.oav.name.." wins! any btn to replay"
+  music(13)
   av.anim=av.animlostmatch
  end
  av.oav.state="won"
@@ -561,8 +569,8 @@ function drawmenu()
 
  drawwithp2colours(drawp2start)
 
- print("normal mode: ❎",20,100,7)
- print("sumo mode: 🅾️",20,110,7)
+ print("normal mode: 🅾️",20,100,7)
+ print("sumo mode: ❎",20,110,7)
 end
 
 function drawcountdown()
@@ -570,7 +578,7 @@ function drawcountdown()
 
  sspr(xcorner,16,8,8,
   ct/2,ct/2,
-  128-ct,128-ct)
+  (128-ct)+8,128-ct)
 end
 
 function drawgame()
@@ -632,7 +640,7 @@ function drawgame()
    64,32)
  end
 
- print(announce,30,64)
+ print(announce,4,64)
 
  --debug info
  --drawlocalbox(p1,p1.pushbox,5)
@@ -1151,7 +1159,7 @@ __map__
 0000011001100110011001100110000000000000000110011001100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000100110011001100110011001000000000000001001100110010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-010c00001c350000001c350000001c350000002135021350213502135000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+011100140e0501a050000000e0501a0500000010050100501c0501c050110501a05000000110501a0500000013050130501005010050000000000000000000000000000000000000000000000000000000000000
 010c000030625306250c0530c05330625306250c0530c0530c053306450000000000306250000030625306253c615000000c0433c615000000000030620306153c6150c043000003c6150c043000003c6153c623
 000200001e1601c1601a15014140101400e1300b12006110001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000500002b1702b1602b1502b1402b1302b1202b1102b110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1219,4 +1227,6 @@ __music__
 00 575a6144
 01 2e2f3144
 02 2e303244
+00 41424344
+03 00424344
 
