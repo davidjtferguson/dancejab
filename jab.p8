@@ -60,6 +60,7 @@ function createav(x,name,flipped)
   jabheight=8,
   
   --create animations for this av
+  animcountdown=createanim({224,98,230},{5,2,5}),
   animidle=createanim({224,66,226,228,230,232,64,234,236,238},{5,2,5,5,5,5,2,5,5,5}),
   animwalkforward=createanim({128,130,132,134},5),
   animwalkback=createanim({136,138,140,142},5),
@@ -187,6 +188,9 @@ end
 
 function initcountdown()
  music(0)
+ p1.anim=p1.animcountdown
+ p2.anim=p2.animcountdown
+
  ct=0
  ctvel=0
  xcorner=72
@@ -199,6 +203,8 @@ end
 
 function updatestart()
  if btnp()!=0 then
+  p1.anim=p1.animidle
+  p2.anim=p2.animidle
   currentupdate=updatemenu
   currentdraw=drawmenu
  end
