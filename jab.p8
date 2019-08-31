@@ -101,7 +101,16 @@ function createhitbox(w,h,av)
   height=h,
   av=av,
   pno=av.no,
+  active=true,
+
+  --once inactive, frames before dissipearing
+  destroyframes=8,
+  
+  --fist animations
+  animthrow=createanim({17,2},3,false),
+  animconnect=createanim(32),
  }
+ box.anim=box.animthrow
  add(hitboxes,box)
  return box
 end
@@ -342,7 +351,7 @@ function detectinputs(av)
   av.state="jab"
   av.anim=av.animjab
   av.statetimer=av.jabframes
-  createhitbox(av.jabwidth,av.jabheight,av)
+  av.fist=createhitbox(av.jabwidth,av.jabheight,av)
  end
 end
 
@@ -359,6 +368,10 @@ function updateav(av)
   --on first ringout detection
   if av.state!="ringout" then
    av.hitpoints=0
+
+   if av.fist then
+    del(hitboxes,av.fist)
+   end
 
    --prevent double death
    if av.state!="dead" then
@@ -431,6 +444,9 @@ function updateav(av)
  elseif av.state=="dead" then
   av.xvel*=0.9
  elseif av.state=="ringout" then
+  --make sure we overrite others,
+  -- e.g. lost anim
+  av.anim=av.animringout
   av.yvel+=gravity
   av.xvel*=0.9
  end
@@ -467,7 +483,7 @@ function hitboxcollision(av)
  for box in all(hitboxes) do
   if box.pno!=av.no then
 
-   if aabbcollision(globalbox(av,av.hurtbox),box) then
+   if aabbcollision(globalbox(av,av.hurtbox),box) and box.active then
     --other avatar pauses
     av.oav.state="connectlag"
     av.oav.statetimer=av.oav.connectlagframes
@@ -499,7 +515,8 @@ function hitboxcollision(av)
      sfx(12)
     end
 
-    del(hitboxes,box)
+    box.anim=box.animconnect
+    box.active=false
    end
   end
  end
@@ -520,6 +537,17 @@ function updatescore(av)
 end
 
 function updatehitbox(box)
+ updateanim(box.anim)
+
+ if not box.active then
+  box.destroyframes-=1
+
+  if box.destroyframes==0 then
+   del(hitboxes,box)
+   return
+  end
+ end
+
  --track av pos
  if not box.av.flipped then
   box.x=box.av.x+box.av.width
@@ -534,7 +562,8 @@ function updatehitbox(box)
  
  for otherbox in all(hitboxes) do
   if aabbcollision(box,otherbox) and
-     box.pno!=otherbox.pno then
+     box.pno!=otherbox.pno and
+     box.active and otherbox.active then
    --hitboxes colided,
    -- seperate avs
    -- (should be generic...)
@@ -544,10 +573,11 @@ function updatehitbox(box)
    p1.xvel=-1
    p2.xvel=1
    
-   --...or could just visually remove it
    --todo:should have some sparks or something
-   del(hitboxes,box)
-   del(hitboxes,otherbox)
+   box.active=false
+   box.anim=box.animconnect
+   otherbox.active=false
+   otherbox.anim=otherbox.animconnect
   end
  end 
 end
@@ -582,9 +612,14 @@ end
 function drawcountdown()
  drawgame()
 
+ --because the sprites don't fill the 8x8s,
+ -- need offsets
+ local offset=8
+ if (countdownno==1) offset=0
+
  sspr(xcorner,16,8,8,
   ct/2,ct/2,
-  (128-ct)+8,128-ct)
+  (128-ct)+offset,128-ct)
 end
 
 function drawgame()
@@ -717,7 +752,7 @@ function drawavhitboxes(av)
    if av == p2 then
     boxx-=1
    end
-   spr(2,boxx,box.y,1,1,av.flipped)
+  spr(box.anim.sprite,boxx,box.y,1,1,av.flipped)
   end
  end
 end
