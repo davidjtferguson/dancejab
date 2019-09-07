@@ -133,7 +133,10 @@ function _init()
 
  mode="normal"
 
- --init menu
+ -- menu controls
+ optionselected=0
+
+ --init stage select
  stages={}
  ssid=1
  sstage=nil
@@ -214,23 +217,67 @@ function updatestart()
  if btnp()!=0 then
   p1.anim=p1.animidle
   p2.anim=p2.animidle
-  currentupdate=updatemenu
-  currentdraw=drawmenu
+  currentupdate=updatestageselect
+  currentdraw=drawstageselect
  end
 end
 
 function updatemenu()
- if btnp(❎) or btnp(🅾️) then
+ if btnp(⬇️) then
+  sfx(4)
+  optionselected+=1
+
+  if optionselected>2 then
+   optionselected=0
+  end
+ end
+ 
+ if btnp(⬆️) then
+  sfx(4)
+  optionselected-=1
+
+  if optionselected<0 then
+   optionselected=2
+  end
+ end
+
+ --option 0 is stage select
+ if optionselected==0 and (btnp(➡️) or btnp(⬅️)) then
+  sfx(4)
+  if btnp(➡️) then
+   ssid=1
+  elseif btnp(⬅️) then
+   ssid=#stages
+  end
+
+  loadstage()
+
   currentupdate=updatestageselect
   currentdraw=drawstageselect
+ end
 
-  if btnp(🅾️) then
+ --option 1 is mode
+ if optionselected==1 and (btnp(➡️) or btnp(⬅️)) then
+  sfx(4)
+  if mode=="normal" then
+   mode="sumo"
+  elseif mode=="sumo" then
    mode="normal"
   end
+ end
 
-  if btnp(❎) then
-   mode="sumo"
+ --option 2 is hitpoints
+ if optionselected==2 then
+  if btnp(➡️) then
+   sfx(4)
+   maxhitpoints+=1
+  elseif btnp(⬅️) and maxhitpoints>1 then
+   sfx(4)
+   maxhitpoints-=1
   end
+
+  p1.hitpoints=maxhitpoints
+  p2.hitpoints=maxhitpoints
  end
 end
 
@@ -238,24 +285,24 @@ function updatestageselect()
  updateanim(p1.anim)
  updateanim(p2.anim)
 
- if btnp(0) or btnp(1) then
-  if btnp(0) then
+ if btnp(⬅️) or btnp(➡️) then
+  sfx(4)
+  if btnp(⬅️) then
    ssid-=1
-   if ssid==0 then
-    --todo:options menu
-    ssid=#stages
-   end
-  elseif btnp(1) then
+  elseif btnp(➡️) then
    ssid+=1
    if ssid>#stages then
-    ssid=1
+    ssid=0
    end
   end
-  sstage=stages[ssid]
-  p1.x=sstage.p1x
-  p1.y=sstage.p1y
-  p2.x=sstage.p2x
-  p2.y=sstage.p2y
+
+  if ssid==0 then
+   --go to options menu
+   currentupdate=updatemenu
+   currentdraw=drawmenu
+  else
+   loadstage()
+  end
  end
 
  if btnp(❎) or btnp(🅾️) then
@@ -263,6 +310,14 @@ function updatestageselect()
   currentupdate=updatecountdown
   currentdraw=drawcountdown
  end
+end
+
+function loadstage()
+ sstage=stages[ssid]
+ p1.x=sstage.p1x
+ p1.y=sstage.p1y
+ p2.x=sstage.p2x
+ p2.y=sstage.p2y
 end
 
 function updatecountdown() 
@@ -600,13 +655,29 @@ function drawstart()
 end
 
 function drawmenu()
- sspr(0,50,16,16,
-  10,40,32,32)
+ local option0="menu"
+ local option1="mode"
+ local option2="hitpoints"
 
- drawwithp2colours(drawp2start)
+ if optionselected==0 then
+  option0=addarrows(option0)
+ elseif optionselected==1 then
+  option1=addarrows(option1)
+ elseif optionselected==2 then
+  option2=addarrows(option2)
+ end
 
- print("normal mode: 🅾️",20,100,7)
- print("sumo mode: ❎",20,110,7)
+ outline(option0,(52-#option0*2),12,10,8)
+
+ outline(option1,(52-#option1*2),30,10,8)
+ print(mode,(52-#mode*2),40,10,8)
+
+ outline(option2,(52-#option2*2),50,10,8)
+ print(maxhitpoints,(52-1*2),60,10,8)
+end
+
+function addarrows(s)
+ return "⬅️ "..s.." ➡️"
 end
 
 function drawcountdown()
@@ -1204,7 +1275,7 @@ __sfx__
 010c000030625306250c0530c05330625306250c0530c0530c053306450000000000306250000030625306253c615000000c0433c615000000000030620306153c6150c043000003c6150c043000003c6153c623
 000200001e1601c1601a15014140101400e1300b12006110001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000500002b1702b1602b1502b1402b1302b1202b1102b110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-010400000740006400054000440002400024000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0003000028730287300f0000c00002400024000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010400002d3002d3002b3002a3002830024300203001b30017300123000d300073000130001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010c000030620306151b6031b6031b603106031010310003076030700307103000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010500201f624000001a6001a6251d600000001f600000001d62500000000001f624000000000000000000001f624000001a6001a6251d600000001f600000001d62500000000001f62400000000000000000000
