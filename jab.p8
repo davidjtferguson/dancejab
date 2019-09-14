@@ -497,6 +497,13 @@ function updateav(av)
   if av.statetimer==0 and av.score!=firstto then
    resetround()
   end
+
+  --if we were playing the throw punch anim
+  -- wait till it finishes
+  if av.anim.looping or av.anim.finished then
+   av.anim=av.animvictory
+  end
+ 
  elseif av.state=="dead" then
   av.xvel*=0.9
  elseif av.state=="ringout" then
@@ -588,7 +595,6 @@ function updatescore(av)
   av.anim=av.animlostmatch
  end
  av.oav.state="won"
- av.oav.anim=av.animvictory
  av.oav.statetimer=90
 end
 
@@ -903,6 +909,7 @@ function createanim(sprites,speeds,looping)
   along=1,
   counter=0,
   t=time(),
+  finished=false,
  }
  return t
 end
@@ -946,6 +953,7 @@ function updateanim(a)
      if a.looping then
       a.along=1
      else
+      a.finished=true
       a.along=#a.sprites
      end
     end
