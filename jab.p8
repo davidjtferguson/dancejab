@@ -89,6 +89,11 @@ function createav(x,y,name,flipped)
   name=name,
  }
  av.anim=av.animidle
+
+ if modes[mode]=="1 hit ko" then
+  av.hitpoints=1
+ end
+
  add(avs,av)
  return av
 end
@@ -131,7 +136,8 @@ function _init()
  maxhitpoints=3
  gravity=0.15
 
- mode="normal"
+ modes={"normal","sumo","1 hit ko"}
+ mode=1
 
  -- menu controls
  optionselected=0
@@ -220,17 +226,20 @@ function updatestart()
  if btnp()!=0 then
   p1.anim=p1.animidle
   p2.anim=p2.animidle
-  currentupdate=updatestageselect
-  currentdraw=drawstageselect
+  currentupdate=updatemenu
+  currentdraw=drawmenu
  end
 end
 
 function updatemenu()
+ updateanim(p1.anim)
+ updateanim(p2.anim)
+
  if btnp(⬇️) then
   sfx(5)
   optionselected+=1
 
-  if optionselected>2 then
+  if optionselected>1 then
    optionselected=0
   end
  end
@@ -240,74 +249,58 @@ function updatemenu()
   optionselected-=1
 
   if optionselected<0 then
-   optionselected=2
+   optionselected=1
   end
  end
 
  --option 0 is stage select
  if optionselected==0 and (btnp(➡️) or btnp(⬅️)) then
   sfx(4)
-  if btnp(➡️) then
-   ssid=1
-  elseif btnp(⬅️) then
-   ssid=#stages
+  if btnp(⬅️) then
+   ssid-=1
+   if ssid==0 then
+    ssid=#stages
+   end
+  elseif btnp(➡️) then
+   ssid+=1
+   if ssid>#stages then
+    ssid=1
+   end
   end
 
   loadstage()
-
-  currentupdate=updatestageselect
-  currentdraw=drawstageselect
  end
 
  --option 1 is mode
  if optionselected==1 and (btnp(➡️) or btnp(⬅️)) then
   sfx(4)
-  if mode=="normal" then
-   mode="sumo"
-  elseif mode=="sumo" then
-   mode="normal"
-  end
- end
 
- --option 2 is hitpoints
- if optionselected==2 then
   if btnp(➡️) then
-   sfx(4)
-   maxhitpoints+=1
-  elseif btnp(⬅️) and maxhitpoints>1 then
-   sfx(4)
-   maxhitpoints-=1
-  end
+   mode+=1
 
-  p1.hitpoints=maxhitpoints
-  p2.hitpoints=maxhitpoints
- end
-end
+   if mode>#modes then
+    mode=1
+   end
+  elseif btnp(⬅️) then
+   mode-=1
 
-function updatestageselect()
- updateanim(p1.anim)
- updateanim(p2.anim)
-
- if btnp(⬅️) or btnp(➡️) then
-  sfx(4)
-  if btnp(⬅️) then
-   ssid-=1
-  elseif btnp(➡️) then
-   ssid+=1
-   if ssid>#stages then
-    ssid=0
+   if mode==0 then
+    mode=#modes
    end
   end
 
-  if ssid==0 then
-   --go to options menu
-   currentupdate=updatemenu
-   currentdraw=drawmenu
+  --before I was setting maxhitpoints to 1
+  -- but this is cooler because you can see
+  -- you're low on health from the menu
+  if modes[mode]=="1 hit ko" then
+   p1.hitpoints=1
+   p2.hitpoints=1
   else
-   loadstage()
+   p1.hitpoints=maxhitpoints
+   p2.hitpoints=maxhitpoints
   end
  end
-
+ 
  if btnp(❎) or btnp(🅾️) then
   initcountdown()
   currentupdate=updatecountdown
@@ -554,7 +547,7 @@ function hitboxcollision(av)
     av.oav.xvel=0
 
     --been punched!
-    if mode!="sumo" then
+    if modes[mode]!="sumo" then
      av.hitpoints-=1
     end
 
@@ -656,25 +649,26 @@ function drawstart()
 end
 
 function drawmenu()
- local option0="menu"
+ drawgame()
+
+ local option0="stage"
+ local option0length=#option0
  local option1="mode"
- local option2="hitpoints"
+ local option1length=#option1
 
  if optionselected==0 then
   option0=addarrows(option0)
+  option0length=#option0+2
  elseif optionselected==1 then
   option1=addarrows(option1)
- elseif optionselected==2 then
-  option2=addarrows(option2)
+  option1length=#option1+2
  end
 
- outline(option0,(52-#option0*2),12,10,8)
+ outline(option0,(64-option0length*2),12,10,8)
+ print(sstage.name,(64-#sstage.name*2),20,10,8)
 
- outline(option1,(52-#option1*2),30,10,8)
- print(mode,(52-#mode*2),40,10,8)
-
- outline(option2,(52-#option2*2),50,10,8)
- print(maxhitpoints,(52-1*2),60,10,8)
+ outline(option1,(64-option1length*2),30,10,8)
+ print(modes[mode],(64-#modes[mode]*2),38,10,8)
 end
 
 function addarrows(s)
@@ -722,7 +716,7 @@ function drawgame()
  spr(18,101,3,3,1)
 
  --explain why health isn't going down
- if mode=="sumo" then
+ if modes[mode]=="sumo" then
   print("sumo",7,5,7)
   print("sumo",106,5,7)
  end
@@ -975,12 +969,6 @@ function createstage(n,cx,cy,p1x,p1y,p2x,p2y)
   p2y=p2y
  }
  add(stages,s)
-end
-
-function drawstageselect()
- drawgame()
-
- outline("⬅️ "..sstage.name.." ➡️",(52-#stages[ssid].name*2),12,10,8)
 end
 
 function outline(s,x,y,c1,c2)
