@@ -13,11 +13,14 @@ function createav(x,y,name,flipped)
  
   --how long each action lasts
   -- in frames at 60fps
+  -- note animations will need to be updated
+  -- if screwing around with these
   dashframes=7,
   jabframes=7,
   jablagframes=10,
-  connectlagframes=12,
-  hitstunframes=10,
+  connectlagframes=19,
+  hitpauseframes=7,
+  hitrecoilframes=10,
   
   --movement limits
   -- in pixels/frame
@@ -69,7 +72,7 @@ function createav(x,y,name,flipped)
   animjab=createanim({72,74,76},{3,6,1},false),
   animringout=createanim({192,194},6,false),
   animjablag=createanim({78,44,100},{3,3,5},false),
-  animconnectlag=createanim({102,74,46,78},{2,3,5,3},false),
+  animconnectlag=createanim({102,74,46,78},{9,3,5,3},false),
   animhitstun=createanim({34,108,110},{3,3,10},false),
   animlostround=createanim({108,110},{6,1},false),
   animlostmatch=createanim({160,162,164,166},{6,3,10,10}),
@@ -108,12 +111,9 @@ function createhitbox(w,h,av)
   pno=av.no,
   active=true,
 
-  --once inactive, frames before dissipearing
-  destroyframes=13,
-  
   --fist animations
   animthrow=createanim({120,104},{3,5},false),
-  animconnect=createanim({121,120,104},{3,2,15},false),
+  animconnect=createanim({121,120,104},{9,2,7},false),
  }
  box.anim=box.animthrow
  add(hitboxes,box)
@@ -489,8 +489,14 @@ function updateav(av)
   av.xvel=0
  elseif av.state=="connectlag" then
   --pause
- elseif av.state=="hitstun" then
-  --pause
+ elseif av.state=="hitpause" then
+  av.xvel=0
+  if av.statetimer==0 then
+   av.state="hitrecoil"
+   av.statetimer=av.hitrecoilframes
+  end
+ elseif av.state=="hitrecoil" then
+  takeknockback(av)
  elseif av.state=="won" then
   av.xvel=0
 
@@ -505,6 +511,9 @@ function updateav(av)
   end
  
  elseif av.state=="dead" then
+  if av.statetimer==80 then
+   takeknockback(av)
+  end
   av.xvel*=0.9
  elseif av.state=="ringout" then
   --make sure we overrite others,
@@ -542,6 +551,14 @@ function facingforward(av)
  end
 end
 
+function takeknockback(av)
+ if av.flipped then
+  av.xvel=hitknockback
+ else
+  av.xvel=-hitknockback
+ end
+end
+
 function hitboxcollision(av)
  for box in all(hitboxes) do
   if box.pno!=av.no then
@@ -558,15 +575,9 @@ function hitboxcollision(av)
      av.hitpoints-=1
     end
 
-    av.state="hitstun"
-    av.statetimer=av.hitstunframes
+    av.state="hitpause"
+    av.statetimer=av.hitpauseframes
     av.anim=av.animhitstun
-
-    if av.flipped then
-     av.xvel=hitknockback
-    else
-     av.xvel=-hitknockback
-    end
 
     if av.hitpoints==0 then
      sfx(14)
@@ -602,9 +613,7 @@ function updatehitbox(box)
  updateanim(box.anim)
 
  if not box.active then
-  box.destroyframes-=1
-
-  if box.destroyframes==0 then
+  if box.anim.finished then
    del(hitboxes,box)
    return
   end
@@ -700,12 +709,14 @@ function drawgame()
   0,0,
   16,16)
  
- spr(p1.anim.sprite,p1.x,p1.y,2,2,p1.flipped)
+ drawav(p1)
 
+ drawwithp2colours(drawav)
+ 
+ --draw player1 hitboxes again
+ -- on top of p2
  drawavhitboxes(p1)
- 
- drawwithp2colours(drawp2)
- 
+
  --game info
  --p1 health
  rectfill(5,5,24,8,13)
@@ -766,15 +777,19 @@ function drawgame()
  -- end
 end
 
-function drawp2start()
- sspr(96,50,16,16,
-  66,42,32,32,true)
-end
+function drawav(av)
+ --add a little shake if being hit
+ -- shouldn't be every frame!
+ local randx=0
+ local randy=0
 
-function drawp2()
- spr(p2.anim.sprite,p2.x,p2.y,2,2,p2.flipped)
+ if av.state=="hitpause" then
+  randx=rnd(3)-1.5
+  randy=rnd(3)-1.5
+ end
+ spr(av.anim.sprite,av.x+randx,av.y+randy,2,2,av.flipped)
 
- drawavhitboxes(p2)
+ drawavhitboxes(av)
 end
 
 function drawwithp2colours(drawing)
@@ -783,7 +798,7 @@ function drawwithp2colours(drawing)
  pal(12,8)
  pal(1,2)
  
- drawing()
+ drawing(p2)
 
  pal()
  palt(0,false)
