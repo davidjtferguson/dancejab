@@ -136,7 +136,7 @@ function _init()
  maxhitpoints=3
  gravity=0.15
 
- modes={"normal","sumo","1 hit ko"}
+ modes={"normal","sumo","1 hit ko","slippy shoes"}
  mode=1
 
  -- menu controls
@@ -179,7 +179,6 @@ function resetmatch()
  resetround()
  
  --vars
- announce=""
  p1.score=0
  p2.score=0
 
@@ -414,9 +413,7 @@ function updateav(av)
   av.statetimer-=1
  end
 
- --could change to mode instead of stage?
- local icy = checkavflagarea(
-     globalbox(av,av.hurtbox),3)
+ local icy = checkavflagarea(globalbox(av,av.hurtbox),3) or modes[mode]=="slippy shoes"
 
  --on ground?
  if checkavflagarea(
@@ -554,8 +551,14 @@ function updateav(av)
   --check for winner
   -- (after round end pause)
   -- and hard reset
-  if av.statetimer==0 and av.score==firstto and btnp()!=0 then
-   resetmatch()
+  if av.statetimer==0 and av.score==firstto then
+   if btnp(🅾️) or btnp(🅾️,1) then
+    resetmatch()
+   end
+   
+   if btnp(❎) or btnp(❎,1) then
+    exittomenu()
+   end
   end
 
  updateanim(av.anim)
@@ -625,7 +628,6 @@ function updatescore(av)
  av.oav.score+=1
  
  if av.oav.score==firstto then
-  announce=av.oav.name.." wins! any btn to replay"
   music(17)
   av.anim=av.animlostmatch
  end
@@ -728,6 +730,7 @@ function drawcountdown()
 end
 
 function drawgame()
+ --think this drops us to 30fps?
  --drawbackground()
  map(sstage.camerax/8,sstage.cameray/8,
   0,0,
@@ -788,7 +791,24 @@ function drawgame()
    64,32)
  end
 
- outline(announce,4,64,7,3)
+ if p1.score==firstto or p2.score==firstto then
+ 	local col1,col2=10,8
+	 local winner=""
+	 
+	 if p1.score==firstto then
+	  winner="red wins!"
+	 elseif p2.score==firstto then
+	  winner="blue wins!"
+	  col1,col2=13,12
+	 end
+
+  outline(winner,(64-#winner*2),30,col1,col2)
+
+  if p1.statetimer==0 and p2.statetimer==0 then
+   outline("🅾️ replay",46,56,col1,col2)
+   outline("❎ menu",50,74,col1,col2)
+  end
+ end
 
  --debug info
  --drawlocalbox(p1,p1.pushbox,5)
@@ -806,11 +826,13 @@ function drawav(av)
  -- shouldn't be every frame!
  local randx=0
  local randy=0
+ local shakerange=3
 
  if av.state=="hitpause" then
-  randx=rnd(3)-1.5
-  randy=rnd(3)-1.5
+  randx=rnd(shakerange)-(shakerange/2)
+  randy=rnd(shakerange)-(shakerange/2)
  end
+
  spr(av.anim.sprite,av.x+randx,av.y+randy,2,2,av.flipped)
 
  drawavhitboxes(av)
@@ -1327,7 +1349,7 @@ __label__
 111111111111111111111111111111111111111dd111111111111111111111111111111111111111111111111111111111111111167777777777777777777611
 
 __gff__
-0001000101000000000000000000000001010000000000000000000000000000010100000000000000000000000000000101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0001000503000000000000000000000001090000000000000000000000000000010900000000000000000000000000000101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
