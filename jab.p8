@@ -346,6 +346,8 @@ function updatecountdown()
 end
 
 function updategame()
+  updatepes()
+
   --inputs
   for av in all(avs) do
    updateav(av)
@@ -602,6 +604,9 @@ function hitboxcollision(av)
      av.hitpoints-=1
     end
 
+    --sparks
+    initpehit(box.x,box.y)
+
     av.state="hitpause"
     av.statetimer=av.hitpauseframes
     av.anim=av.animhitstun
@@ -809,6 +814,8 @@ function drawgame()
    outline("❎ menu",50,74,col1,col2)
   end
  end
+
+ drawpes()
 
  --debug info
  --drawlocalbox(p1,p1.pushbox,5)
@@ -1086,6 +1093,80 @@ function decompress_spsh(str,toscreen)
   
   hline(cur,l,c)
   cur+=l
+ end
+end
+
+
+-->8
+--particle effects
+
+effects={}
+
+function createeffect(update)
+ e={
+  update=update,
+  particles={}
+ }
+ add(effects,e)
+ return e
+end
+
+function updatepes()
+ for e in all(effects) do
+  e.update(e)
+ end
+end
+
+function drawpes()
+ for e in all(effects) do
+  for p in all(e.particles) do
+   circfill(p.x,p.y,p.r,p.col)
+  end
+ end
+end
+
+function createparticle(x,y,xvel,yvel,r,col,lifespan)
+ p={
+  x=x,
+  y=y,
+  xvel=xvel,
+  yvel=yvel,
+  r=r,
+  col=col,
+  lifespan=lifespan
+ }
+ return p
+end
+
+function initpehit(x,y)
+ local e=createeffect(updatepestraight)
+ 
+ local cols={7,8,12}
+ 
+ for i=0,8 do
+  local p=createparticle(
+   x,y,
+   rnd(2)-1,
+   rnd(6)-3,
+   rnd(2),cols[ceil(rnd(#cols))],
+   rnd(25)+10)
+  add(e.particles,p)
+ end
+end
+
+function updatepestraight(e)
+ for p in all(e.particles) do
+  p.x+=p.xvel
+  p.y+=p.yvel
+  
+  p.lifespan-=1
+  if p.lifespan<=0 then
+   del(e.particles,p)
+  end
+ end
+
+ if #e.particles==0 then
+  del(effects,e)
  end
 end
 
