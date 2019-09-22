@@ -398,6 +398,10 @@ function detectinputs(av)
    --dash to the right
    av.xvel=av.xdashmaxvel
   end
+
+  --kick up dust
+  -- (done after as needs xvel set)
+  initpedash(av)
  end
  
  --jab
@@ -1138,18 +1142,45 @@ function createparticle(x,y,xvel,yvel,r,col,lifespan)
  return p
 end
 
+function initpedash(av)
+ local e=createeffect(updatepestraight)
+
+ local cols={5,6,7}
+ if av.name=="red" then
+  add(cols,8)
+ else
+  add(cols,12)
+ end
+
+ --out of front foot or back foot?
+ local footpos=0
+ if av.xvel>0 then
+  footpos=av.width
+ end
+
+ for i=0,4 do
+  local p=createparticle(
+   av.x+footpos,av.y+av.height,
+   -sgn(av.xvel),
+   rnd(0.5)-0.35,
+   rnd(2),cols[ceil(rnd(#cols))],
+   rnd(12)+5)
+  add(e.particles,p)
+ end
+end
+
 function initpehit(x,y)
  local e=createeffect(updatepestraight)
  
  local cols={7,8,12}
  
- for i=0,8 do
+ for i=0,20 do
   local p=createparticle(
    x,y,
    rnd(2)-1,
    rnd(6)-3,
-   rnd(2),cols[ceil(rnd(#cols))],
-   rnd(25)+10)
+   rnd(3),cols[ceil(rnd(#cols))],
+   rnd(30)+5)
   add(e.particles,p)
  end
 end
@@ -1161,7 +1192,13 @@ function updatepestraight(e)
   
   p.lifespan-=1
   if p.lifespan<=0 then
-   del(e.particles,p)
+   --fade out
+   if p.r>=1 then
+    p.r-=1
+    p.lifespan=3+rnd(4)
+   else
+    del(e.particles,p)
+   end
   end
  end
 
