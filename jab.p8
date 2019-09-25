@@ -19,8 +19,12 @@ function createav(x,y,name,flipped)
   jabframes=7,
   jablagframes=10,
   connectlagframes=19,
+
   hitpauseframes=7,
   hitrecoilframes=10,
+
+  clankstunframes=14,
+  clankrecoilframes=10,
   
   --movement limits
   -- in pixels/frame
@@ -77,7 +81,8 @@ function createav(x,y,name,flipped)
   animlostround=createanim({108,110},{6,1},false),
   animlostmatch=createanim({160,162,164,166},{6,3,10,10}),
   animvictory=createanim({168,170,172,174},6),
-  animclank=createanim(106),
+  animclankstun=createanim(76),
+  animclankrecoil=createanim(106),
   animuptaunt=createanim(68),
   animdowntaunt=createanim(64),
 
@@ -118,6 +123,7 @@ function createhitbox(w,h,av)
   --fist animations
   animthrow=createanim({120,104},{3,5},false),
   animconnect=createanim({121,120,104},{9,2,7},false),
+  animclank=createanim({121,104},{13,1},false),
  }
  box.anim=box.animthrow
  add(hitboxes,box)
@@ -547,6 +553,16 @@ function updateav(av)
   end
  elseif av.state=="hitrecoil" then
   takeknockback(av)
+ elseif av.state=="clankstun" then
+  av.xvel=0
+  av.anim=av.animclankstun
+  if av.statetimer==0 then
+   av.state="clankrecoil"
+   av.statetimer=av.clankrecoilframes
+   av.anim=av.animclankrecoil
+  end
+ elseif av.state=="clankrecoil" then
+  takeknockback(av)
  elseif av.state=="won" then
   av.xvel=0
 
@@ -712,20 +728,21 @@ function updatehitbox(box)
   if aabbcollision(box,otherbox) and
      box.pno!=otherbox.pno and
      box.active and otherbox.active then
-   --hitboxes colided,
-   -- seperate avs
-   -- (should be generic...)
-   
-   p1.anim=p1.animclank
-   p2.anim=p2.animclank
-   p1.xvel=-1
-   p2.xvel=1
-   
-   --todo:should have some sparks or something
+   --clank!
+   sfx(60)
+
+   p1.state="clankstun"
+   p1.statetimer=p1.clankstunframes
+   p2.state="clankstun"
+   p2.statetimer=p2.clankstunframes
+
    box.active=false
-   box.anim=box.animconnect
+   box.anim=box.animclank
    otherbox.active=false
-   otherbox.anim=otherbox.animconnect
+   otherbox.anim=otherbox.animclank
+
+   --sparks!
+   initpehit(box.x,box.y)
   end
  end 
 end
@@ -881,14 +898,14 @@ function drawav(av)
  local randy=0
  local shakerange=3
 
- if av.state=="hitpause" then
+ if av.state=="hitpause" or av.state=="clankstun" then
   randx=rnd(shakerange)-(shakerange/2)
   randy=rnd(shakerange)-(shakerange/2)
  end
 
  spr(av.anim.sprite,av.x+randx,av.y+randy,2,2,av.flipped)
 
- drawavhitboxes(av)
+ drawavhitboxes(av,randx,randy)
 end
 
 function drawwithp2colours(drawing)
@@ -928,7 +945,10 @@ function drawbackground()
 	end
 end
 
-function drawavhitboxes(av)
+function drawavhitboxes(av,rx,ry)
+ rx=rx or 0
+ ry=ry or 0
+
  for box in all(hitboxes) do
   if box.av == av then
 
@@ -938,7 +958,7 @@ function drawavhitboxes(av)
    if av == p2 then
     boxx-=1
    end
-  spr(box.anim.sprite,boxx,box.y,1,1,av.flipped)
+  spr(box.anim.sprite,boxx+rx,box.y+ry,1,1,av.flipped)
   end
  end
 end
@@ -1589,6 +1609,7 @@ __sfx__
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010500002405000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010500000c05000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000300003065033650386503865035630306302a62028610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __music__
 00 52595644
 00 12191144

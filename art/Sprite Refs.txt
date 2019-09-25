@@ -30,3 +30,4 @@ Fall Off - 15
 Davbo sfx to be fixed up:
 up taunt - 58
 down taunt - 59
+clank - 60
