@@ -78,6 +78,8 @@ function createav(x,y,name,flipped)
   animlostmatch=createanim({160,162,164,166},{6,3,10,10}),
   animvictory=createanim({168,170,172,174},6),
   animclank=createanim(106),
+  animuptaunt=createanim(68),
+  animdowntaunt=createanim(64),
 
   hitpoints=maxhitpoints,
  
@@ -488,7 +490,14 @@ function updateav(av)
    if not icy then
     av.xvel*=av.xdecellrate
    end
-   av.anim=av.animidle
+   
+   if btn(⬆️,av.no) then
+    av.anim=av.animuptaunt
+   elseif btn(⬇️,av.no) then
+    av.anim=av.animdowntaunt
+   else
+    av.anim=av.animidle
+   end
   end
   
   if av.xvel>av.xmaxvel then
