@@ -500,13 +500,7 @@ function updateav(av)
    end
   end
   
-  if av.xvel>av.xmaxvel then
-   av.xvel=av.xmaxvel
-  end
-  
-  if av.xvel<(-av.xmaxvel) then
-   av.xvel=-av.xmaxvel
-  end
+  capvelocity(av)
  elseif av.state=="dash" then
   if facingforward(av) then
    av.anim=av.animdashforward
@@ -519,6 +513,8 @@ function updateav(av)
    av.state="jablag"
    av.statetimer=av.jablagframes
   end
+  
+  capvelocity(av)
  elseif av.state=="jablag" then
    if not icy then
     av.xvel=0
@@ -580,6 +576,16 @@ function updateav(av)
 
  av.x+=av.xvel
  av.y+=av.yvel
+end
+
+function capvelocity(av)
+  if av.xvel>av.xmaxvel then
+   av.xvel=av.xmaxvel
+  end
+  
+  if av.xvel<(-av.xmaxvel) then
+   av.xvel=-av.xmaxvel
+  end
 end
 
 function facingforward(av)
