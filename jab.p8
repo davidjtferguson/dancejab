@@ -92,6 +92,8 @@ function createav(x,y,name,flipped)
   state="none",
   statetimer=0,
   name=name,
+  jabpressed=false,
+  dashpressed=false,
  }
  av.anim=av.animidle
 
@@ -350,7 +352,6 @@ end
 function updategame()
   updatepes()
 
-  --inputs
   for av in all(avs) do
    updateav(av)
   end
@@ -380,7 +381,8 @@ function updategame()
 
 function detectinputs(av)
  --dash triggered
- if btnp(❎,av.no) then
+ if btn(❎,av.no) and not av.dashpressed then
+  av.dashpressed=true
   sfx(8)
   av.state="dash"
   av.statetimer=av.dashframes
@@ -405,14 +407,23 @@ function detectinputs(av)
   -- (done after as needs xvel set)
   initpedash(av)
  end
+
+ if not btn(❎,av.no) then
+  av.dashpressed=false
+ end
  
  --jab
- if btnp(🅾️,av.no) then
+ if btn(🅾️,av.no) and not av.jabpressed then
+  av.jabpressed=true
   sfx(9+flr(rnd(2)))
   av.state="jab"
   av.anim=av.animjab
   av.statetimer=av.jabframes
   av.fist=createhitbox(av.jabwidth,av.jabheight,av)
+ end
+
+ if not btn(🅾️,av.no) then
+  av.jabpressed=false
  end
 end
 
@@ -492,8 +503,14 @@ function updateav(av)
    end
    
    if btn(⬆️,av.no) then
+    -- if not av.anim.sprite==av.animuptaunt.sprite then
+    --  sfx(58)
+    -- end
     av.anim=av.animuptaunt
    elseif btn(⬇️,av.no) then
+    -- if not av.anim.sprite==av.animdowntaunt.sprite then
+    --  sfx(59)
+    -- end
     av.anim=av.animdowntaunt
    else
     av.anim=av.animidle
@@ -1559,6 +1576,9 @@ __sfx__
 010f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 011400180705307020071120705307120130102b6351f612070421301507140130141303307053071120705307120130112b6351f612070350714007020070100000000000000000000000000000000000000000
 011400180a0530a020161120a0530a1200a0102e635226120a0420a0150a1400a0140503311053111120505305120110112963529612050350514011020050100500000000000000000000000000000000000000
+001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010500002405000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010500000c05000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __music__
 00 52595644
 00 12191144
