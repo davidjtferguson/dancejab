@@ -467,6 +467,10 @@ function updateav(av)
     del(hitboxes,av.fist)
    end
 
+   if av.oav.fist then
+    av.oav.fist.active=false
+   end
+
    --prevent double death
    if av.state!="dead" then
     sfx(15)
