@@ -615,8 +615,15 @@ function updateav(av)
   --dashing into someone makes you bounce off
   -- so walking is strong against dashing
   if av.state=="dash" then
-   av.xvel*=av.xcollisionmult
    sfx(11)
+   av.xvel*=av.xcollisionmult
+
+   local x,y=p1.x+p1.width,p1.y+5
+   if av==p2 then
+    x,y=p2.x,p2.y+5
+   end
+
+   initpehit(x,y,1,10,4,7)
   else
    av.xvel=0
    av.anim=av.animstoponother
@@ -673,7 +680,7 @@ function hitboxcollision(av)
     end
 
     --sparks
-    initpehit(box.x,box.y)
+    initpehit(box.x,box.y,3,20,5,30)
 
     av.state="hitpause"
     av.statetimer=av.hitpauseframes
@@ -748,7 +755,7 @@ function updatehitbox(box)
    otherbox.anim=otherbox.animclank
 
    --sparks!
-   initpehit(box.x,box.y)
+   initpehit(box.x,box.y,4,30,5,15)
   end
  end 
 end
@@ -818,6 +825,10 @@ function drawgame()
  -- on top of p2
  drawavhitboxes(p1)
 
+ --draw particle effects ontop of
+ -- players but behind ui
+ drawpes()
+
  --game info
  --p1 health
  rectfill(5,5,24,8,13)
@@ -883,8 +894,6 @@ function drawgame()
    outline("❎ menu",50,74,col1,col2)
   end
  end
-
- drawpes()
 
  --debug info
  --drawlocalbox(p1,p1.pushbox,5)
@@ -1237,18 +1246,19 @@ function initpedash(av)
  end
 end
 
-function initpehit(x,y)
+function initpehit(x,y,rndradius,no,lifespan,rndlifespan)
  local e=createeffect(updatepestraight)
  
+ --white, red and blue
  local cols={7,8,12}
  
- for i=0,20 do
+ for i=0,no do
   local p=createparticle(
    x,y,
    rnd(2)-1,
    rnd(6)-3,
-   rnd(3),cols[ceil(rnd(#cols))],
-   rnd(30)+5)
+   rnd(rndradius),cols[ceil(rnd(#cols))],
+   rnd(rndlifespan)+lifespan)
   add(e.particles,p)
  end
 end
