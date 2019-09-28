@@ -85,6 +85,7 @@ function createav(x,y,name,flipped)
   animclankrecoil=createanim(106),
   animuptaunt=createanim(68),
   animdowntaunt=createanim(64),
+  animstoponother=createanim(5),
 
   hitpoints=maxhitpoints,
  
@@ -362,27 +363,9 @@ function updategame()
   for av in all(avs) do
    updateav(av)
   end
-  
+
   for box in all(hitboxes) do
    updatehitbox(box)
-  end
-  
-  if aabbcollision(
-     globalbox(p1,p1.pushbox),
-     globalbox(p2,p2.pushbox))
-  then
-   sfx(11)
-
-   --if -1
-   -- flips velocity, so walking
-   -- is strong against dashing
-   -- at gaining space.
-   p1.xvel*=p1.xcollisionmult
-   p2.xvel*=p2.xcollisionmult
-   
-   --bounce off eachother
-   p1.xvel-=0.5
-   p2.xvel+=0.5
   end
  end
 
@@ -621,6 +604,25 @@ function updateav(av)
   av.xvel=0
  end
 
+ --collide with eachother
+ nextxposbox=globalbox(av,av.pushbox)
+ nextxposbox.x+=av.xvel
+
+ if aabbcollision(
+    nextxposbox,
+    globalbox(av.oav,av.oav.pushbox))
+ then
+  --dashing into someone makes you bounce off
+  -- so walking is strong against dashing
+  if av.state=="dash" then
+   av.xvel*=av.xcollisionmult
+   sfx(11)
+  else
+   av.xvel=0
+   av.anim=av.animstoponother
+  end
+ end
+
  av.x+=av.xvel
  av.y+=av.yvel
 end
@@ -637,9 +639,9 @@ end
 
 function facingforward(av)
  if (not av.flipped and
-    av.xvel>0) or
+    av.xvel>=0) or
     (av.flipped and
-    av.xvel<0) then 
+    av.xvel<=0) then 
   return true
  else
   return false
