@@ -99,8 +99,10 @@ function createav(x,y,name,flipped)
   state="none",
   statetimer=0,
   name=name,
-  jabpressed=false,
-  dashpressed=false,
+  jabdown=false,
+  dashdown=false,
+  updown=false,
+  downdown=false,
  }
  av.anim=av.animidle
 
@@ -372,8 +374,8 @@ function updategame()
 
 function detectinputs(av)
  --dash triggered
- if btn(❎,av.no) and not av.dashpressed then
-  av.dashpressed=true
+ if btn(❎,av.no) and not av.dashdown then
+  av.dashdown=true
   sfx(8)
   av.state="dash"
   av.statetimer=av.dashframes
@@ -400,12 +402,12 @@ function detectinputs(av)
  end
 
  if not btn(❎,av.no) then
-  av.dashpressed=false
+  av.dashdown=false
  end
  
  --jab
- if btn(🅾️,av.no) and not av.jabpressed then
-  av.jabpressed=true
+ if btn(🅾️,av.no) and not av.jabdown then
+  av.jabdown=true
   sfx(9+flr(rnd(2)))
   av.state="jab"
   av.anim=av.animjab
@@ -414,7 +416,7 @@ function detectinputs(av)
  end
 
  if not btn(🅾️,av.no) then
-  av.jabpressed=false
+  av.jabdown=false
  end
 end
 
@@ -498,17 +500,32 @@ function updateav(av)
    end
    
    if btn(⬆️,av.no) then
-    -- if not av.anim.sprite==av.animuptaunt.sprite then
-    --  sfx(58)
-    -- end
+    if not av.updown then
+     av.updown=true
+     --sfx(58,av.no+1)
+     sfx(58)
+    end
+
     av.anim=av.animuptaunt
    elseif btn(⬇️,av.no) then
-    -- if not av.anim.sprite==av.animdowntaunt.sprite then
-    --  sfx(59)
-    -- end
+    if not av.downdown then
+     av.downdown=true
+     --sfx(59,av.no+1)
+     sfx(59)
+    end
     av.anim=av.animdowntaunt
    else
     av.anim=av.animidle
+   end
+
+   if not btn(⬆️,av.no) then
+    av.updown=false
+    --sfx(-1,av.no+1)
+   end
+
+   if not btn(⬇️,av.no) then
+    av.downdown=false
+    --sfx(-1,av.no+1)
    end
   end
   
@@ -1639,8 +1656,8 @@ __sfx__
 011400180705307020071120705307120130102b6351f612070421301507140130141303307053071120705307120130112b6351f612070350714007020070100000000000000000000000000000000000000000
 011400180a0530a020161120a0530a1200a0102e635226120a0420a0150a1400a0140503311053111120505305120110112963529612050350514011020050100500000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-010500002405000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-010500000c05000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000500002405025050260502605026050260500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000500000c0500b0500b0500b0500b050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0103000035670296701b6731b6531b123106431015324673376733f2033c7033c613216101b61316623106200a610046100a710047100a600046000a600046000000000000000000000000000000000000000000
 __music__
 00 52595644
