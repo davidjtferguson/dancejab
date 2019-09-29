@@ -24,7 +24,8 @@ function createav(x,y,name,flipped)
   hitrecoilframes=10,
 
   clankstunframes=18,
-  clankrecoilframes=10,
+  clankrecoilframes=6,
+  clankbreatherframes=16,
   
   --movement limits
   -- in pixels/frame
@@ -67,7 +68,7 @@ function createav(x,y,name,flipped)
   jabheight=8,
   
   --create animations for this av
-		animcountdown=createanim({64,234,236,64,226,228},{3,4,16,3,4,16}),
+  animcountdown=createanim({64,234,236,64,226,228},{3,4,16,3,4,16}),
   animidle=createanim({66,226,228,230,232,64,234,236,238,224},{2,5,5,5,5,2,5,5,5,5}),
   animwalkforward=createanim({128,130,132,134},5),
   animwalkback=createanim({136,138,140,142},5),
@@ -82,10 +83,10 @@ function createav(x,y,name,flipped)
   animlostmatch=createanim({160,162,164,166},{6,3,10,10}),
   animvictory=createanim({168,170,172,174},6),
   animclankstun=createanim(76),
-  animclankrecoil=createanim({108,106,196,202},{2,3,5,3}),
+  animclankrecoil=createanim({108,106,196,202},{2,3,5,3},false),
   animuptaunt=createanim({66,168,170,68,224},{2,2,2,8,2}),
   animdowntaunt=createanim({64,226,228,64,234,236},{3,4,7,3,4,7}),
-  animstoponother=createanim({200,236,45},{5,5,10}),
+  animstoponother=createanim({200,236,44},{5,5,10}),
 
   hitpoints=maxhitpoints,
  
@@ -511,6 +512,10 @@ function updateav(av)
    end
   end
   
+  if collidingwithotherav(av) then
+   av.anim=av.animstoponother
+  end
+
   capvelocity(av)
  elseif av.state=="dash" then
   if facingforward(av) then
@@ -550,6 +555,13 @@ function updateav(av)
   end
  elseif av.state=="clankrecoil" then
   takeknockback(av)
+
+ if av.statetimer==0 then
+  av.state="clankbreather"
+  av.statetimer=av.clankbreatherframes
+ end
+ elseif av.state=="clankbreather" then
+  av.xvel*=0.75
  elseif av.state=="won" then
   av.xvel=0
 
@@ -605,12 +617,7 @@ function updateav(av)
  end
 
  --collide with eachother
- nextxposbox=globalbox(av,av.pushbox)
- nextxposbox.x+=av.xvel
-
- if aabbcollision(
-    nextxposbox,
-    globalbox(av.oav,av.oav.pushbox))
+ if collidingwithotherav(av)
  then
   --dashing into someone makes you bounce off
   -- so walking is strong against dashing
@@ -626,13 +633,22 @@ function updateav(av)
    initpehit(x,y,1,10,4,7)
   else
    av.xvel=0
-   av.anim=av.animstoponother
   end
  end
 
  av.x+=av.xvel
  av.y+=av.yvel
 end
+
+function collidingwithotherav(av)
+ local nextxposbox=globalbox(av,av.pushbox)
+ nextxposbox.x+=av.xvel
+
+ return aabbcollision(
+    nextxposbox,
+    globalbox(av.oav,av.oav.pushbox))
+end
+
 
 function capvelocity(av)
   if av.xvel>av.xmaxvel then
