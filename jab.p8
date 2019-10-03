@@ -17,7 +17,7 @@ function createav(x,y,name,flipped)
   -- if screwing around with these
   dashframes=7,
   jabframes=7,
-  jablagframes=10,
+  jablagframes=14,
   connectlagframes=19,
 
   hitpauseframes=7,
@@ -185,6 +185,8 @@ function exittomenu()
  music(20)
  currentupdate=updatemenu
  currentdraw=drawmenu
+
+ effects={}
 
  p1.anim=p1.animidle
  p2.anim=p2.animidle
@@ -433,7 +435,7 @@ function updateav(av)
   av.yvel=0
 
   --tredmill tiles
-  if av.state!="won" and av.oav.state!="won" then
+  if av.state!="won" and av.oav.state!="won" and not collidingwithotherav(av) then
    if checkavflagarea(
      globalbox(av,av.hurtbox),1) then
     av.x-=0.25
@@ -502,30 +504,28 @@ function updateav(av)
    if btn(⬆️,av.no) then
     if not av.updown then
      av.updown=true
-     --sfx(58,av.no+1)
-     sfx(58)
+     sfx(58,av.no*2)
     end
 
     av.anim=av.animuptaunt
    elseif btn(⬇️,av.no) then
     if not av.downdown then
      av.downdown=true
-     --sfx(59,av.no+1)
-     sfx(59)
+     sfx(59,(av.no*2)+1)
     end
     av.anim=av.animdowntaunt
    else
     av.anim=av.animidle
    end
-
+ 
    if not btn(⬆️,av.no) then
     av.updown=false
-    --sfx(-1,av.no+1)
+    sfx(-1,av.no*2)
    end
 
    if not btn(⬇️,av.no) then
     av.downdown=false
-    --sfx(-1,av.no+1)
+    sfx(-1,(av.no*2)+1)
    end
   end
   
@@ -634,8 +634,7 @@ function updateav(av)
  end
 
  --collide with eachother
- if collidingwithotherav(av)
- then
+ if collidingwithotherav(av) then
   --dashing into someone makes you bounce off
   -- so walking is strong against dashing
   if av.state=="dash" then
@@ -838,18 +837,37 @@ function drawcountdown()
  local offset=8
  if (countdownno==1) offset=0
 
- sspr(xcorner,16,8,8,
+ sspr(xcorner,16,8,9,
   ct/2,ct/2,
   (128-ct)+offset,128-ct)
 end
 
+stagetimer=0
+stagetoggletime=45
+
 function drawgame()
  --think this drops us to 30fps?
  --drawbackground()
+
+ --draw tredmill arrows as flashing 
+	-- (assumes col 8 and 12 aren't used anywhere else but the arrows)
+ stagetimer+=1
+
+ if stagetimer >=stagetoggletime then
+  pal(12,1)
+  pal(8,2)
+ end
+
+ if stagetimer >=(stagetoggletime*2) then
+  stagetimer=0
+ end
+
  map(sstage.camerax/8,sstage.cameray/8,
   0,0,
   16,16)
- 
+
+ resetpal()
+
  drawav(p1)
 
  drawwithp2colours(drawav)
@@ -964,6 +982,10 @@ function drawwithp2colours(drawing)
  
  drawing(p2)
 
+ resetpal()
+end
+
+function resetpal()
  pal()
  palt(0,false)
  palt(11,true)
@@ -1012,7 +1034,7 @@ function drawavhitboxes(av,rx,ry)
 end
 
 -->8
- --collisions
+--collisions
 
 --convert box from av local
 -- to global coords
@@ -1209,7 +1231,6 @@ function decompress_spsh(str,toscreen)
   cur+=l
  end
 end
-
 
 -->8
 --particle effects
@@ -1656,8 +1677,8 @@ __sfx__
 011400180705307020071120705307120130102b6351f612070421301507140130141303307053071120705307120130112b6351f612070350714007020070100000000000000000000000000000000000000000
 011400180a0530a020161120a0530a1200a0102e635226120a0420a0150a1400a0140503311053111120505305120110112963529612050350514011020050100500000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000500002405025050260502605026050260500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000500000c0500b0500b0500b0500b050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0008000d1ac401bc001cc001fc301ec001ec001bc3018c2017c0014c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000500060ff500df500cf500cf500cf500df500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0103000035670296701b6731b6531b123106431015324673376733f2033c7033c613216101b61316623106200a610046100a710047100a600046000a600046000000000000000000000000000000000000000000
 __music__
 00 52595644
