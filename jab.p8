@@ -437,7 +437,7 @@ function updateav(av)
 
  --on ground?
  if checkavflagarea(
-    globalbox(av,av.hurtbox),0) then
+    globalbox(av,av.hurtbox),0) and av.state!="ringout" then
   av.yvel=0
 
   --tredmill tiles
@@ -582,10 +582,10 @@ function updateav(av)
  elseif av.state=="clankrecoil" then
   takeknockback(av)
 
- if av.statetimer==0 then
-  av.state="clankbreather"
-  av.statetimer=av.clankbreatherframes
- end
+  if av.statetimer==0 then
+   av.state="clankbreather"
+   av.statetimer=av.clankbreatherframes
+  end
  elseif av.state=="clankbreather" then
   av.xvel*=0.75
  elseif av.state=="wonround" then
@@ -609,7 +609,8 @@ function updateav(av)
    music(17)
   end
 
-  if av.statetimer>=85 then
+  --only apply to dead, not ringout
+  if av.statetimer>=85 and av.oav=="dead" then
    takeknockback(av.oav)
   end
 
@@ -649,16 +650,11 @@ function updateav(av)
   av.anim=av.animringout
   av.xvel*=0.9
   
-  local g=gravity
-  if av.oav.state=="wonmatchpause" then
-   g*=0.25
-  end
-  av.yvel+=g
+  av.yvel+=gravity
  end
 
  -- some states don't reset
  if av.statetimer==0 and
-    (av.state!="wonround" and av.oav.state!="wonround") and
     (av.state!="wonmatch" and av.oav.state!="wonmatch") then
   av.state="none"
  end
@@ -890,10 +886,6 @@ stagetoggletime=45
 function drawgame()
  if p1.state=="wonmatchpause" or p2.state=="wonmatchpause" then
   cls(0)
-  
-  --this does make a slowdown effect
-  -- but makes the avs flash :(
-  --flip()
 
   for i=0,15 do
    pal(i,7)
@@ -903,6 +895,10 @@ function drawgame()
   drawav(p2)
 
   resetpal()
+
+  --renders each frame twice for one update
+  -- effectively making a slowmo effect
+  flip()
  else
   drawbackground()
 
@@ -1407,14 +1403,15 @@ end
 function initpeflame(x,y,name)
  local e=createeffect(updatepeflame)
  
- --white + red or blue
- local col=8
+ --white + red
+ local col1,col2=2,8
 
+ -- or blue
  if name=="blue" then
-  col=12
+  col1,col2=1,12
  end
 
- local cols={6,7,col,col}
+ local cols={6,7,col1,col2,col2}
  
  for i=0,5 do
   local p=createparticle(
