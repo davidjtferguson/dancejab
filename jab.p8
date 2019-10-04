@@ -81,6 +81,7 @@ function createav(x,y,name,flipped)
   animhitstun=createanim({34,108,110},{3,3,10},false),
   animlostround=createanim({108,110},{6,1},false),
   animlostmatch=createanim({160,162,164,166},{6,3,10,10}),
+  animwonmatchpause=createanim({64,226,228,64,234,236},{6,8,14,6,8,14}),
   animvictory=createanim({168,170,172,174},6),
   animclankstun=createanim(76),
   animclankrecoil=createanim({108,106,196,202},{2,3,5,3},false),
@@ -242,6 +243,7 @@ end
 
 function updatestart()
  if pxbtnp(❎) or pxbtnp(🅾️) then
+  sfx(4)
   p1.anim=p1.animidle
   p2.anim=p2.animidle
   currentupdate=updatemenu
@@ -439,7 +441,10 @@ function updateav(av)
   av.yvel=0
 
   --tredmill tiles
-  if av.state!="won" and av.oav.state!="won" and not collidingwithotherav(av) then
+  if av.state!="wonround" and av.oav.state!="wonround" and
+     av.state!="wonmatchpause" and av.oav.state!="wonmatchpause" and
+     av.state!="wonmatch" and av.oav.state!="wonmatch" and
+     not collidingwithotherav(av) then
    if checkavflagarea(
      globalbox(av,av.hurtbox),1) then
     av.x-=0.25
@@ -583,25 +588,57 @@ function updateav(av)
  end
  elseif av.state=="clankbreather" then
   av.xvel*=0.75
- elseif av.state=="won" then
+ elseif av.state=="wonround" then
   av.xvel=0
 
-  if av.statetimer==0 and av.score!=firstto then
-   resetround()
+  if av.statetimer==0 then
+   resetround()  
+   sfx(3)
   end
 
   --if we were playing the throw punch anim
   -- wait till it finishes
   if av.anim.looping or av.anim.finished then
    av.anim=av.animvictory
-
-   if p1.score==firstto or p2.score==firstto then
-    initpeflame(64,7,av.name)
-   end
   end
- 
+
+ elseif av.state=="wonmatchpause" then
+  if av.statetimer==0 then
+   av.state="wonmatch"
+   av.statetimer=90  
+   music(17)
+  end
+
+  if av.statetimer>=85 then
+   takeknockback(av.oav)
+  end
+
+  if av.anim.looping or av.anim.finished then
+   av.anim=av.animwonmatchpause
+  end
+
+ elseif av.state=="wonmatch" then
+  --if we were playing the throw punch anim
+  -- wait till it finishes
+  if av.anim.looping or av.anim.finished then
+   av.anim=av.animvictory
+   initpeflame(64,7,av.name)
+  end
+
+  av.oav.anim=av.animlostmatch
+  av.oav.xvel=0
+
+  --navigation inputs
+  if pxbtnp(🅾️) then
+   resetmatch()
+  end
+  
+  if pxbtnp(❎) then
+   exittomenu()
+  end
+
  elseif av.state=="dead" then
-  if av.statetimer==80 then
+  if av.statetimer>=80 then
    takeknockback(av)
   end
   av.xvel*=0.9
@@ -611,24 +648,16 @@ function updateav(av)
   av.anim=av.animringout
   av.yvel+=gravity
   av.xvel*=0.9
+  
+  av.statetimer=5
  end
 
- if av.statetimer==0 and (av.state!="won" and av.oav.state!="won") then
+ -- some states don't reset
+ if av.statetimer==0 and
+    (av.state!="wonround" and av.oav.state!="wonround") and
+    (av.state!="wonmatch" and av.oav.state!="wonmatch") then
   av.state="none"
  end
-
-  --check for winner
-  -- (after round end pause)
-  -- and hard reset
-  if av.statetimer==0 and av.score==firstto then
-   if btnp(🅾️) or btnp(🅾️,1) then
-    resetmatch()
-   end
-   
-   if btnp(❎) or btnp(❎,1) then
-    exittomenu()
-   end
-  end
 
  updateanim(av.anim)
 
@@ -747,11 +776,12 @@ end
 function updatescore(av)
  av.oav.score+=1
  
+ av.oav.state="wonround"
  if av.oav.score==firstto then
-  music(17)
-  av.anim=av.animlostmatch
+  music(-1)
+  av.oav.state="wonmatchpause"
  end
- av.oav.state="won"
+
  av.oav.statetimer=90
 end
 
@@ -854,66 +884,81 @@ stagetimer=0
 stagetoggletime=45
 
 function drawgame()
- --think this drops us to 30fps?
- --drawbackground()
+ if p1.state=="wonmatchpause" or p2.state=="wonmatchpause" then
+  cls(0)
+  
+  --this does make a slowdown effect
+  -- but makes the avs flash :(
+  --flip()
 
- --draw tredmill arrows as flashing 
-	-- (assumes col 8 and 12 aren't used anywhere else but the arrows)
- stagetimer+=1
+  for i=0,15 do
+   pal(i,7)
+  end
 
- if stagetimer >=stagetoggletime then
-  pal(12,1)
-  pal(8,2)
- end
+  drawav(p1)
+  drawav(p2)
 
- if stagetimer >=(stagetoggletime*2) then
-  stagetimer=0
- end
+  resetpal()
+ else
+  --think this drops us to 30fps?
+  --drawbackground()
 
- map(sstage.camerax/8,sstage.cameray/8,
-  0,0,
-  16,16)
+  --draw tredmill arrows as flashing 
+  -- (assumes col 8 and 12 aren't used anywhere else but the arrows)
+  stagetimer+=1
 
- resetpal()
+  if stagetimer >=stagetoggletime then
+   pal(12,1)
+   pal(8,2)
+  end
 
- drawav(p1)
+  if stagetimer >=(stagetoggletime*2) then
+   stagetimer=0
+  end
 
- drawwithp2colours(drawav)
- 
- --draw player1 hitboxes again
- -- on top of p2
- drawavhitboxes(p1)
+  map(sstage.camerax/8,sstage.cameray/8,
+   0,0,
+   16,16)
 
- --draw particle effects ontop of
- -- players but behind ui
- drawpes()
+  resetpal()
 
- drawui()
+  drawav(p1)
 
- --draw fight sprite for first
- -- -ct frames of fight
- -- set in updatecountdown
- if countdownno==0 and ct<30 then
-  ct+=1
-  sspr(96,0,32,16,
-   32,48,
-   64,32)
- end
+  drawwithp2colours(drawav)
+  
+  --draw player1 hitboxes again
+  -- on top of p2
+  drawavhitboxes(p1)
 
- if p1.score==firstto or p2.score==firstto then
- 	local col1,col2=10,8
-	local winner=""
-	 
-	if p1.score==firstto then
-	 winner="red wins!"
-	elseif p2.score==firstto then
-	 winner="blue wins!"
-	 col1,col2=13,12
-	end
+  --draw particle effects ontop of
+  -- players but behind ui
+  drawpes()
 
-  outline(winner,(64-#winner*2),30,col1,col2)
+  drawui()
 
-  if p1.statetimer==0 and p2.statetimer==0 then
+  --draw fight sprite for first
+  -- -ct frames of fight
+  -- set in updatecountdown
+  if countdownno==0 and ct<30 then
+   ct+=1
+   sspr(96,0,32,16,
+    32,48,
+    64,32)
+  end
+
+  if p1.state=="wonmatch" or p2.state=="wonmatch" then
+   local col1,col2=10,8
+  local winner=""
+
+  if p1.state=="wonmatch" then
+   winner="red wins!"
+  else
+   winner="blue wins!"
+   col1,col2=13,12
+  end
+
+   outline(winner,(64-#winner*2),30,col1,col2)
+
    outline("🅾️ replay",46,56,col1,col2)
    outline("❎ menu",50,74,col1,col2)
   end
