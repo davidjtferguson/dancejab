@@ -241,7 +241,7 @@ function _update60()
 end
 
 function updatestart()
- if btnp()!=0 then
+ if pxbtnp(❎) or pxbtnp(🅾️) then
   p1.anim=p1.animidle
   p2.anim=p2.animidle
   currentupdate=updatemenu
@@ -253,7 +253,7 @@ function updatemenu()
  updateanim(p1.anim)
  updateanim(p2.anim)
 
- if btnp(⬇️) then
+ if pxbtnp(⬇️) then
   sfx(5)
   optionselected+=1
 
@@ -262,7 +262,7 @@ function updatemenu()
   end
  end
  
- if btnp(⬆️) then
+ if pxbtnp(⬆️) then
   sfx(5)
   optionselected-=1
 
@@ -272,14 +272,14 @@ function updatemenu()
  end
 
  --option 0 is stage select
- if optionselected==0 and (btnp(➡️) or btnp(⬅️)) then
+ if optionselected==0 and (pxbtnp(➡️) or pxbtnp(⬅️)) then
   sfx(4)
-  if btnp(⬅️) then
+  if pxbtnp(⬅️) then
    ssid-=1
    if ssid==0 then
     ssid=#stages
    end
-  elseif btnp(➡️) then
+  elseif pxbtnp(➡️) then
    ssid+=1
    if ssid>#stages then
     ssid=1
@@ -290,16 +290,16 @@ function updatemenu()
  end
 
  --option 1 is mode
- if optionselected==1 and (btnp(➡️) or btnp(⬅️)) then
+ if optionselected==1 and (pxbtnp(➡️) or pxbtnp(⬅️)) then
   sfx(4)
 
-  if btnp(➡️) then
+  if pxbtnp(➡️) then
    mode+=1
 
    if mode>#modes then
     mode=1
    end
-  elseif btnp(⬅️) then
+  elseif pxbtnp(⬅️) then
    mode-=1
 
    if mode==0 then
@@ -319,11 +319,16 @@ function updatemenu()
   end
  end
  
- if btnp(❎) or btnp(🅾️) then
+ if pxbtnp(❎) or pxbtnp(🅾️) then
   initcountdown()
   currentupdate=updatecountdown
   currentdraw=drawcountdown
  end
+end
+
+--either player btnp
+function pxbtnp(b)
+ return btnp(b) or btnp(b,1)
 end
 
 function loadstage()
