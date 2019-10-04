@@ -835,7 +835,7 @@ function updatehitbox(box)
 end
 
 function _draw()
- cls(1)
+ cls()
  currentdraw()
  print(test,0,0,4)
 end
@@ -860,11 +860,11 @@ function drawmenu()
   option1length=#option1+2
  end
 
- outline(option0,(64-option0length*2),12,10,8)
- print(sstage.name,(64-#sstage.name*2),20,10,8)
+ outline(option0,(64-option0length*2),16,10,8)
+ print(sstage.name,(64-#sstage.name*2),24,10,8)
 
- outline(option1,(64-option1length*2),30,10,8)
- print(modes[mode],(64-#modes[mode]*2),38,10,8)
+ outline(option1,(64-option1length*2),34,10,8)
+ print(modes[mode],(64-#modes[mode]*2),42,10,8)
 end
 
 function addarrows(s)
@@ -904,8 +904,7 @@ function drawgame()
 
   resetpal()
  else
-  --think this drops us to 30fps?
-  --drawbackground()
+  drawbackground()
 
   --draw tredmill arrows as flashing 
   -- (assumes col 8 and 12 aren't used anywhere else but the arrows)
@@ -1060,22 +1059,23 @@ end
 -- https://twitter.com/lexaloffle/status/1149043190218891264
 move=0
 movevel=0
-moveadd=0.001
+moveadd=0.00015
 
 function drawbackground()
  movevel+=moveadd
  move+=movevel
  
- if abs(movevel)>0.1 then
+ if abs(movevel)>0.04 then
   moveadd*=-1
  end
 
-	for z=32,1,-1 do
-	 for x=-32,32 do
+	for z=16,1,-1 do
+	 for x=-16,16 do
 	  y=cos(x/16+z/32+move/2)*50-80-move*50   
 	  sx,r,c=64+x*64/z,8/z,circfill
-	  c(sx,64+y/z,r,12+(x+z*2)%4)
-	  c(sx,64+-y/z,r,5)
+	  --c(sx,64+y/z,r,12+(x+z*2)%4)
+	  c(sx,64+y/z,r,2)
+	  c(sx,64+-y/z,r,1)
 	 end
 	end
 end
