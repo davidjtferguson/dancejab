@@ -185,18 +185,18 @@ function exittomenu()
  currentupdate=updatemenu
  currentdraw=drawmenu
 
- effects={}
-
  p1.anim=p1.animidle
  p2.anim=p2.animidle
 end
 
 function resetmatch()
  resetround()
- 
+
  --vars
  p1.score=0
  p2.score=0
+
+ effects={}
 
  initcountdown()
  currentupdate=updatecountdown
@@ -594,6 +594,10 @@ function updateav(av)
   -- wait till it finishes
   if av.anim.looping or av.anim.finished then
    av.anim=av.animvictory
+
+   if p1.score==firstto or p2.score==firstto then
+    initpeflame(64,7,av.name)
+   end
   end
  
  elseif av.state=="dead" then
@@ -884,42 +888,7 @@ function drawgame()
  -- players but behind ui
  drawpes()
 
- --game info
- --p1 health
- rectfill(5,5,24,8,13)
- if p1.hitpoints>0 then
-  rectfill(5,5,4+(20*(p1.hitpoints/maxhitpoints)),8,8)
- end
- spr(18,3,3,3,1,true)
-
- --p2 health
- rectfill(103,5,122,8,13)
- if p2.hitpoints>0 then
-  rectfill(103+20-20*(p2.hitpoints/maxhitpoints),5,122,8,12)
- end
- spr(18,101,3,3,1)
-
- --explain why health isn't going down
- if modes[mode]=="sumo" then
-  print("sumo",7,5,7)
-  print("sumo",106,5,7)
- end
-
- --lights showing score
- local maxgames=firstto*2-1
-
- for i=1,maxgames do
-  local lightspr=26
-  if i<=p1.score then
-   lightspr=10
-  end
-
-  if i>(maxgames-p2.score) then
-   lightspr=11
-  end
-
-  spr(lightspr,i*7+(57-(maxgames/2)*7),1)
- end
+ drawui()
 
  --draw fight sprite for first
  -- -ct frames of fight
@@ -933,14 +902,14 @@ function drawgame()
 
  if p1.score==firstto or p2.score==firstto then
  	local col1,col2=10,8
-	 local winner=""
+	local winner=""
 	 
-	 if p1.score==firstto then
-	  winner="red wins!"
-	 elseif p2.score==firstto then
-	  winner="blue wins!"
-	  col1,col2=13,12
-	 end
+	if p1.score==firstto then
+	 winner="red wins!"
+	elseif p2.score==firstto then
+	 winner="blue wins!"
+	 col1,col2=13,12
+	end
 
   outline(winner,(64-#winner*2),30,col1,col2)
 
@@ -993,6 +962,49 @@ function resetpal()
  pal()
  palt(0,false)
  palt(11,true)
+end
+
+function drawui()
+ --p1 health
+ rectfill(5,5,24,8,13)
+ if p1.hitpoints>0 then
+  rectfill(5,5,4+(20*(p1.hitpoints/maxhitpoints)),8,8)
+ end
+ spr(18,3,3,3,1,true)
+
+ --p2 health
+ rectfill(103,5,122,8,13)
+ if p2.hitpoints>0 then
+  rectfill(103+20-20*(p2.hitpoints/maxhitpoints),5,122,8,12)
+ end
+ spr(18,101,3,3,1)
+
+ --explain why health isn't going down
+ if modes[mode]=="sumo" then
+  print("sumo",7,5,7)
+  print("sumo",106,5,7)
+ end
+
+ --lights showing score
+ local maxgames=firstto*2-1
+
+ for i=1,maxgames do
+  local lightspr=9
+
+  if i==(flr(maxgames/2+1)) then
+   lightspr=25
+  end
+
+  if i<=p1.score then
+   lightspr+=1
+  end
+
+  if i>(maxgames-p2.score) then
+   lightspr+=2
+  end
+
+  spr(lightspr,i*8+(57-(maxgames/2)*8),3)
+ end
 end
 
 --adapted form
@@ -1343,23 +1355,65 @@ function updatepestraight(e)
  end
 end
 
+function initpeflame(x,y,name)
+ local e=createeffect(updatepeflame)
+ 
+ --white + red or blue
+ local col=8
+
+ if name=="blue" then
+  col=12
+ end
+
+ local cols={6,7,col,col}
+ 
+ for i=0,5 do
+  local p=createparticle(
+   x,y,
+   rnd(2)-1,
+   rnd(2)-1,
+   rnd(2),cols[ceil(rnd(#cols))],
+   rnd(30)+45)
+  add(e.particles,p)
+ end
+end
+
+function updatepeflame(e)
+ for p in all(e.particles) do
+  p.x+=p.xvel
+  p.y+=p.yvel
+
+  --raise upwards
+  p.yvel-=0.1
+  
+  p.lifespan-=1
+  if p.lifespan<=0 then
+   del(e.particles,p)
+  end
+ end
+
+ if #e.particles==0 then
+  del(effects,e)
+ end
+end
+
 __gfx__
-00000000d6666666cc7ccbbbd66666666666666dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb499aa4bbb5665bbbb5665bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-000000002dddddd667cccbbb2dddd6d66d6dddd2bbbbb888888888bbbbb888888888bbbb4a8888a4b578875bb57cc75bbbbbbbbbbbbbbbbbbbbbbbbbbbbb5000
-007007002d2666d676cccbbb27766c7667866772bbbb28887877782bbb28888878782bbb9888e789b688e76bb6cc676bbbbbbb000bbbbbbbbbbbbbbbbbbb5670
-000770002d2dd6d6cccccbbb2cccccc778888882bbbb88888888878bbb88888888878bbb98887e89b6887e6bb6cc766b0000000670bbbbb000bb000bbbbb0770
-000770002d2dd6d6cccccbbb2cccccc228888882bbbb888888888882bb888888888882bb988e8889b688886bb6cccc6b06777707700000006700670000000770
-007007002d2222d6cccccbbb22222c2662822222bbb2828288888828b2828288888828bb98888889b688886bb6cccc6b06767700006777770700775777770670
-000000002dddddd6cccccbbb25ddd2d66d2ddd52bbb8882228888228b8882228888228bb4a8888a4b578875bb57cc75b06755006707777770700770777770670
-000000002222222dccccbbbb2222222dd2222222bbb8882222222228b8882222222228bbb4999a4bbb5665bbbb5665bb07777007707700006700770067000670
-5ddddddd77777777bbbbbbbbbbbbbbbbbbbbbbbbbbbc7c8211ee1122b2882111221122bbb499aa4bbb5665bbb499aa4b077670077077006707777705770b5770
-2555555d1d777777b51111000000000000001bbbbbccc7c8eeeee88bbb882c77cee88bbb4adddda4b57dd75b4acccca4077000077077007707777700770bb00b
-255ddd5d171667d6b1bbbbbbbbbbbbbbbbbb65bbbbcccc7c8eee888bbb28cccc7c888bbb9ddd67d9b6dd676b9ccc67c90770bb076077777707007700770bbbbb
-25255d5d1d1dd6d6b1bbbbbbbbbbbbbbbbbb761bbbcccccc828b82bbbbbbcccccc82bbbb9ddd76d9b6dd766b9ccc76c90670bb055067777707007700770b5000
-25255d5d1d1dd6d6b567bbbbbbbbbbbbbbbbbb1bbbcccc1c888bbbbbbbbbcccc1c8bbbbb9dd6ddd9b6dddd6b9cc6ccc90770bbbbbb05500007007700770b0670
-2522255d1d1111d6bb56bbbbbbbbbbbbbbbbbb1bbb6cc1cc88bbbbbbbbbb6cc1cc8bbbbb9dddddd9b6dddd6b9cccccc90000bbbbbbbbbbb005bb5000670b0660
-2555555d1dddddd6bbb5100000000000011111dbbbb66c8888bbbbbbbbbbb66c188bbbbb4adddda4b57dd75b4acccca4bbbbbbbbbbbbbbbbbbbbbbbb000b5005
-222222251111111dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbebbbebbbbbbbbbbbebbbebbbbbb4999a4bbb5665bbb4999a4bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+00000000d6666666cc7ccbbbd66666666666666dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb5665bbbb5665bbbb5665bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+000000002dddddd667cccbbb2dddd6d66d6dddd2bbbbb888888888bbbbb888888888bbbbb57dd75bb578875bb57cc75bbbbbbbbbbbbbbbbbbbbbbbbbbbbb5000
+007007002d2666d676cccbbb27766c7667866772bbbb28887877782bbb28888878782bbbb6dd676bb688e76bb6cc676bbbbbbb000bbbbbbbbbbbbbbbbbbb5670
+000770002d2dd6d6cccccbbb2cccccc778888882bbbb88888888878bbb88888888878bbbb6dd766bb6887e6bb6cc766b0000000670bbbbb000bb000bbbbb0770
+000770002d2dd6d6cccccbbb2cccccc228888882bbbb888888888882bb888888888882bbb6dddd6bb688886bb6cccc6b06777707700000006700670000000770
+007007002d2222d6cccccbbb22222c2662822222bbb2828288888828b2828288888828bbb6dddd6bb688886bb6cccc6b06767700006777770700775777770670
+000000002dddddd6cccccbbb25ddd2d66d2ddd52bbb8882228888228b8882228888228bbb57dd75bb578875bb57cc75b06755006707777770700770777770670
+000000002222222dccccbbbb2222222dd2222222bbb8882222222228b8882222222228bbbb5665bbbb5665bbbb5665bb07777007707700006700770067000670
+5ddddddd77777777bbbbbbbbbbbbbbbbbbbbbbbbbbbc7c8211ee1122b2882111221122bbb499aa4bb499aa4bb499aa4b077670077077006707777705770b5770
+2555555d1d777777b51111000000000000001bbbbbccc7c8eeeee88bbb882c77cee88bbb4adddda44a8888a44acccca4077000077077007707777700770bb00b
+255ddd5d171667d6b1bbbbbbbbbbbbbbbbbb65bbbbcccc7c8eee888bbb28cccc7c888bbb9ddd67d99888e7899ccc67c90770bb076077777707007700770bbbbb
+25255d5d1d1dd6d6b1bbbbbbbbbbbbbbbbbb761bbbcccccc828b82bbbbbbcccccc82bbbb9ddd76d998887e899ccc76c90670bb055067777707007700770b5000
+25255d5d1d1dd6d6b567bbbbbbbbbbbbbbbbbb1bbbcccc1c888bbbbbbbbbcccc1c8bbbbb9dd6ddd9988e88899cc6ccc90770bbbbbb05500007007700770b0670
+2522255d1d1111d6bb56bbbbbbbbbbbbbbbbbb1bbb6cc1cc88bbbbbbbbbb6cc1cc8bbbbb9dddddd9988888899cccccc90000bbbbbbbbbbb005bb5000670b0660
+2555555d1dddddd6bbb5100000000000011111dbbbb66c8888bbbbbbbbbbb66c188bbbbb4adddda44a8888a44acccca4bbbbbbbbbbbbbbbbbbbbbbbb000b5005
+222222251111111dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbebbbebbbbbbbbbbbebbbebbbbbb4999a4bb4999a4bb4999a4bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 2222f22257777777bbbbb888888888bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0000bbbbb000bbbbbb000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 2ffffff217777777bbbb88888888888bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb067770bbb07770bbbb0670bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 2ffffff2157ddd7dbbb888888888888bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0777770b0677770bb06770bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
