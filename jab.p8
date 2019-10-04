@@ -642,14 +642,18 @@ function updateav(av)
    takeknockback(av)
   end
   av.xvel*=0.9
+
  elseif av.state=="ringout" then
   --make sure we overrite others,
   -- e.g. lost anim
   av.anim=av.animringout
-  av.yvel+=gravity
   av.xvel*=0.9
   
-  av.statetimer=5
+  local g=gravity
+  if av.oav.state=="wonmatchpause" then
+   g*=0.25
+  end
+  av.yvel+=g
  end
 
  -- some states don't reset
