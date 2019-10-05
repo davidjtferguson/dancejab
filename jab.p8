@@ -609,6 +609,9 @@ function updateav(av)
    music(17)
   end
 
+  --prevent ringing out during pause
+  av.xvel=0
+
   --only apply to dead, not ringout
   if av.statetimer>=85 and av.oav=="dead" then
    takeknockback(av.oav)
