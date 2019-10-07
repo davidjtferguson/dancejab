@@ -8,9 +8,10 @@ test=""
 
 --avatar
 function createav(x,y,name,flipped)
- local av={
   --constants, play around with
- 
+ local hurtboxwidth=8
+
+ local av={
   --how long each action lasts
   -- in frames at 60fps
   -- note animations will need to be updated
@@ -48,11 +49,12 @@ function createav(x,y,name,flipped)
   width=16,
   height=16,
 
-  -- x,y local to av x,y
+  --edit with local hurtboxwidth
+  -- at the top of this func
   hurtbox={
-   x=5,
+   x=8-(hurtboxwidth/2),
    y=6,
-   width=5,
+   width=hurtboxwidth,
    height=10,
   },
 
@@ -85,8 +87,8 @@ function createav(x,y,name,flipped)
   animvictory=createanim({168,170,172,174},6),
   animclankstun=createanim(76),
   animclankrecoil=createanim({108,106,196,202},{2,3,5,3},false),
-  animuptaunt=createanim({66,168,170,68,224},{2,2,2,8,2}),
-  animdowntaunt=createanim({64,226,228,64,234,236},{3,4,7,3,4,7}),
+  animuptaunt=createanim({66,168,170,68,224},{2,2,2,8,2},false),
+  animdowntaunt=createanim({64,226,228,64,234,236},{3,4,7,3,4,7},false),
   animstoponother=createanim({200,236,44},{5,5,10}),
 
   hitpoints=maxhitpoints,
@@ -382,7 +384,7 @@ function updategame()
 
 function detectinputs(av)
  --dash triggered
- if btn(❎,av.no) and not av.dashdown then
+ if btn(🅾️,av.no) and not av.dashdown then
   av.dashdown=true
   sfx(8)
   av.state="dash"
@@ -393,7 +395,7 @@ function detectinputs(av)
    --dash to the left
    av.xvel=-av.xdashmaxvel
   elseif btn(➡️,av.no) and
-         btnp(❎,av.no) then
+         btnp(🅾️,av.no) then
    --dash to the right
    av.xvel=av.xdashmaxvel
   elseif av.flipped then
@@ -406,15 +408,15 @@ function detectinputs(av)
 
   --kick up dust
   -- (done after as needs xvel set)
-  initpedash(av)
+  initpedash(av,2,4)
  end
 
- if not btn(❎,av.no) then
+ if not btn(🅾️,av.no) then
   av.dashdown=false
  end
  
  --jab
- if btn(🅾️,av.no) and not av.jabdown then
+ if btn(❎,av.no) and not av.jabdown then
   av.jabdown=true
   sfx(9+flr(rnd(2)))
   av.state="jab"
@@ -423,7 +425,7 @@ function detectinputs(av)
   av.fist=createhitbox(av.jabwidth,av.jabheight,av)
  end
 
- if not btn(🅾️,av.no) then
+ if not btn(❎,av.no) then
   av.jabdown=false
  end
 end
@@ -492,7 +494,7 @@ function updateav(av)
     av.state=="dash" then
   detectinputs(av)
  end
- 
+
  if av.state=="none" then
   --walking
   if facingforward(av) then
@@ -501,43 +503,62 @@ function updateav(av)
    av.anim=av.animwalkback
   end
 
+  local prevxvel=av.xvel
+
   if btn(⬅️,av.no) then
    av.xvel-=av.xacc
+
+   if prevxvel>=0 and av.xvel<0 then
+    initpedash(av,0,1)
+   end
   elseif btn(➡️,av.no) then
    av.xvel+=av.xacc
+   
+   if prevxvel<=0 and av.xvel>0 then
+    initpedash(av,0,1)
+   end
   else
    if not icy then
     av.xvel*=av.xdecellrate
+
+    if abs(av.xvel)<0.25 then
+     av.xvel=0
+    end
    end
    
-   if btn(⬆️,av.no) then
-    if not av.updown then
-     av.updown=true
-     sfx(58,av.no*2)
-    end
+   if btn(⬆️,av.no) and not av.updown then
+    av.updown=true
+    sfx(58)
+    av.state="taunt"
 
+    --reset in state
+    av.statetimer=1
+    
+    av.animuptaunt.finished=false
     av.anim=av.animuptaunt
-   elseif btn(⬇️,av.no) then
-    if not av.downdown then
-     av.downdown=true
-     sfx(59,(av.no*2)+1)
-    end
+   elseif btn(⬇️,av.no) and not av.downdown then
+    av.downdown=true
+    sfx(59)
+    av.state="taunt"
+    
+    --reset in state
+    av.statetimer=1
+
+    av.animdowntaunt.finished=false
     av.anim=av.animdowntaunt
    else
     av.anim=av.animidle
    end
  
-   if not btn(⬆️,av.no) and av.updown then
+   if not btn(⬆️,av.no) then
     av.updown=false
-    sfx(-1,av.no*2)
    end
 
-   if not btn(⬇️,av.no) and av.downdown then
+   if not btn(⬇️,av.no) then
     av.downdown=false
-    sfx(-1,(av.no*2)+1)
    end
   end
-  
+
   if collidingwithotherav(av) then
    av.anim=av.animstoponother
   end
@@ -562,7 +583,15 @@ function updateav(av)
     av.xvel=0
    end
  elseif av.state=="connectlag" then
-   av.xvel=0
+  av.xvel=0
+ elseif av.state=="taunt" then
+  av.xvel=0
+
+  --stay here till anim finished
+  av.statetimer=1
+  if av.anim.finished then
+   av.state="none"
+  end
  elseif av.state=="hitpause" then
   av.xvel=0
   if av.statetimer==0 then
@@ -686,7 +715,7 @@ function updateav(av)
     x,y=p2.x,p2.y+5
    end
 
-   initpehit(x,y,1,10,4,7)
+   initpehit(x,y,1,10,4,7,{7,8,12})
   else
    av.xvel=0
   end
@@ -752,7 +781,7 @@ function hitboxcollision(av)
     end
 
     --sparks
-    initpehit(box.x,box.y,3,20,5,30)
+    initpehit(box.x,box.y,3,20,5,30,{7,8,12})
 
     av.state="hitpause"
     av.statetimer=av.hitpauseframes
@@ -828,7 +857,7 @@ function updatehitbox(box)
    otherbox.anim=otherbox.animclank
 
    --sparks!
-   initpehit(box.x,box.y,4,30,5,15)
+   initpehit(box.x,box.y,4,30,5,15,{7})
   end
  end 
 end
@@ -967,14 +996,17 @@ function drawgame()
  end
 
  --debug info
- --drawlocalbox(p1,p1.pushbox,5)
- --drawlocalbox(p1,p1.hurtbox,9)
+-- drawlocalbox(p1,p1.pushbox,5)
+-- drawlocalbox(p1,p1.hurtbox,9)
+ 
+-- drawlocalbox(p2,p2.pushbox,5)
+-- drawlocalbox(p2,p2.hurtbox,9)
 
- -- for box in all(hitboxes) do
- --  rectfill(box.x,box.y,
- --   box.x+box.width,
- --   box.y+box.height,3)
- -- end
+-- for box in all(hitboxes) do
+--  rectfill(box.x,box.y,
+--   box.x+box.width,
+--   box.y+box.height,3)
+-- end
 end
 
 function drawav(av)
@@ -1195,6 +1227,7 @@ function updateanim(a)
   if time()-a.t > 1/30 then
    a.counter=0
    a.along=1
+   finished=false
   end
 
   a.t = time()
@@ -1337,15 +1370,10 @@ function createparticle(x,y,xvel,yvel,r,col,lifespan)
  return p
 end
 
-function initpedash(av)
+function initpedash(av,rndradius,no)
  local e=createeffect(updatepestraight)
 
- local cols={5,6,7}
- if av.name=="red" then
-  add(cols,8)
- else
-  add(cols,12)
- end
+ local cols={6,7}
 
  --out of front foot or back foot?
  local footpos=0
@@ -1353,22 +1381,19 @@ function initpedash(av)
   footpos=av.width
  end
 
- for i=0,4 do
+ for i=0,no do
   local p=createparticle(
    av.x+footpos,av.y+av.height,
-   -sgn(av.xvel),
+   (-sgn(av.xvel))+(rnd(1)-0.5),
    rnd(0.5)-0.35,
-   rnd(2),cols[ceil(rnd(#cols))],
+   rnd(rndradius)+1,cols[ceil(rnd(#cols))],
    rnd(12)+5)
   add(e.particles,p)
  end
 end
 
-function initpehit(x,y,rndradius,no,lifespan,rndlifespan)
+function initpehit(x,y,rndradius,no,lifespan,rndlifespan,cols)
  local e=createeffect(updatepestraight)
- 
- --white, red and blue
- local cols={7,8,12}
  
  for i=0,no do
   local p=createparticle(
@@ -1800,8 +1825,8 @@ __sfx__
 011400180705307020071120705307120130102b6351f612070421301507140130141303307053071120705307120130112b6351f612070350714007020070100000000000000000000000000000000000000000
 011400180a0530a020161120a0530a1200a0102e635226120a0420a0150a1400a0140503311053111120505305120110112963529612050350514011020050100500000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0008000d1ac401bc001cc001fc301ec001ec001bc3018c2017c0014c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000500060ff500df500cf500cf500cf500df500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000800001ac401bc001cc001fc301ec001ec001bc3018c2017c0014c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000500000ff500df500cf500cf500cf500df500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0103000035670296701b6731b6531b123106431015324673376733f2033c7033c613216101b61316623106200a610046100a710047100a600046000a600046000000000000000000000000000000000000000000
 __music__
 00 52595644
