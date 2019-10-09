@@ -446,6 +446,21 @@ function updateav(av)
   av.statetimer-=1
  end
 
+ --wait... and I dead?
+ -- trying to stamp out issues with both avs taking damage on the same frame
+ -- as something else happening, so their death is interupted by
+ -- another state
+ -- pretty buggy, but prevents a softlock...?
+ if av.hitpoints==0 and av.state!="dead" and av.state!="ringout" then
+  av.anim=av.animlostround
+  av.state="dead"
+  av.statetimer=90
+
+  if av.fist then
+   del(hitboxes,av.fist)
+  end
+ end
+
  local icy = checkavflagarea(globalbox(av,av.groundbox),3) or modes[mode]=="slippy shoes"
 
  --on ground?
@@ -497,7 +512,7 @@ function updateav(av)
    -- end
 
    --prevent double death
-   if av.state!="dead" and roundinprogress then
+   if av.state!="dead" then
     sfx(15)
     av.anim=av.animringout
     updatescore(av)
@@ -645,7 +660,6 @@ function updateav(av)
   if av.anim.looping or av.anim.finished then
    av.anim=av.animvictory
   end
-
  elseif av.state=="wonmatchpause" then
   if av.statetimer==0 then
    av.state="wonmatch"
@@ -690,6 +704,13 @@ function updateav(av)
    takeknockback(av)
   end
   av.xvel*=0.9
+
+  if abs(av.xvel)<0.25 then
+   av.xvel=0
+  end
+
+  --TODO:what if we both die on the same frame
+  -- on the last round?
 
  elseif av.state=="ringout" then
   --make sure we overrite others,
@@ -1021,6 +1042,12 @@ function drawgame()
 
    outline("🅾️ replay",46,56,col1,col2)
    outline("❎ menu",50,74,col1,col2)
+  end
+ 
+  --did we both die on the same frame?
+  if p1.hitpoints==0 and p2.hitpoints==0 then
+   local dko="double ko!"
+   outline(dko,(64-#dko*2),34,10,8)
   end
  end
 
