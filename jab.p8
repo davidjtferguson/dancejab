@@ -483,7 +483,7 @@ function updateav(av)
   end
  else
   --on first ringout detection
-  if av.state!="ringout" and roundinprogress then
+  if av.state!="ringout" then
    av.hitpoints=0
 
    if av.fist then
@@ -736,7 +736,7 @@ function updateav(av)
  updateanim(av.anim)
 
  --stop on walls
- local nextxposbox=globalbox(av,av.hurtbox)
+ local nextxposbox=globalbox(av,av.groundbox)
  nextxposbox.x+=av.xvel
  nextxposbox.y-=2
 
