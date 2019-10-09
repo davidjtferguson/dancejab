@@ -171,6 +171,7 @@ function _init()
  createstage("small",128,128,32,96,80,96)
  createstage("smaller",128,0,40,96,72,96)
  createstage("smallest",256,128,44,96,68,96)
+ --createstage("smallest",256,128,44,64,68,64) -- for double ring out testing
  createstage("walls",768,0,24,96,88,96)
  createstage("ghost",256,0,24,48,88,96)
  createstage("tredmill out",384,0,24,96,88,96)
@@ -467,7 +468,7 @@ function updateav(av)
   end
  else
   --on first ringout detection
-  if av.state!="ringout" then
+  if av.state!="ringout" and roundinprogress then
    av.hitpoints=0
 
    if av.fist then
@@ -478,16 +479,32 @@ function updateav(av)
     av.oav.fist.active=false
    end
 
+   --have we both died on the same frame?
+   --TODO:fix this. currently p1's death is registered first, so p2 wins the round
+   -- even if p2 isn't actually on the ground.
+   -- but... this didn't work. and I'm tired right now. so might do it later.
+   -- or maybe not.
+   -- if checkavflagarea(globalbox(av.oav,av.oav.groundbox),0) then
+   --  --no point awarded for draw
+   --  -- (because it's easiest)
+   --  av.oav.score-=1
+   --  av.oav.state="ringout"
+   --  av.oav.hitpoints=0
+    
+   --  if av.oav.fist then
+   --   del(hitboxes,av.oav.fist)
+   --  end
+   -- end
+
    --prevent double death
-   if av.state!="dead" then
+   if av.state!="dead" and roundinprogress then
     sfx(15)
     av.anim=av.animringout
     updatescore(av)
     av.statetimer=90
-
-    roundinprogress=false
    end
    
+   roundinprogress=false
    av.state="ringout"
   end
   
@@ -623,11 +640,6 @@ function updateav(av)
  elseif av.state=="wonround" then
   av.xvel=0
 
-  if av.statetimer==0 then
-   resetround()  
-   sfx(3)
-  end
-
   --if we were playing the throw punch anim
   -- wait till it finishes
   if av.anim.looping or av.anim.finished then
@@ -688,10 +700,16 @@ function updateav(av)
   av.yvel+=gravity
  end
 
- -- some states don't reset
+ --reset state, or the round
+ -- except for wonmatch, which has the menu up on screen.
  if av.statetimer==0 and
     (av.state!="wonmatch" and av.oav.state!="wonmatch") then
   av.state="none"
+
+  if not roundinprogress then
+   resetround()  
+   sfx(3)
+  end
  end
 
  updateanim(av.anim)
@@ -724,10 +742,10 @@ function updateav(av)
   end
  end
 
- if av.prevxvel>=0 and av.xvel<0 then
-  initpedash(av,0,1)
- end
- if av.prevxvel<=0 and av.xvel>0 then
+ --if we've still started accelerating,
+ -- feet particles
+ if (av.prevxvel>=0 and av.xvel<0) or
+    (av.prevxvel<=0 and av.xvel>0) then
   initpedash(av,0,1)
  end
 
