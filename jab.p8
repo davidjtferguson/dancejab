@@ -300,13 +300,13 @@ function resetround()
  avs={}
  hitboxes={}
 
- p1=createav(sstage.p1x,sstage.p1y,"p1")
+ p1=createav(sstage.p1x,sstage.p1y,"player 1")
  p1.no=0
  p1.score=scorep1
  p1.colsindex=p1colsindex
  p1.cols=p1cols
  
- p2=createav(sstage.p2x,sstage.p2y,"p2",true)
+ p2=createav(sstage.p2x,sstage.p2y,"player 2",true)
  p2.no=1
  p2.score=scorep2
  p2.colsindex=p2colsindex
