@@ -201,8 +201,8 @@ function _init()
    bg=2,
    wtc=8,
    wto=10,
-   lh1=7,
-   lh2=6,
+   lh1=15,
+   lh2=14,
   },
   { --blue (p2 default)
    p=12,
@@ -228,7 +228,7 @@ function _init()
    lh1=7,
    lh2=6,
   },
-   { --green
+  { --green
    p=11,
    s=3,
    s=3,
@@ -253,7 +253,7 @@ function _init()
    lh1=7,
    lh2=6,
   },
-   { --voilet
+  { --voilet
    p=13,
    s=1,
    eyes=0,
@@ -277,7 +277,7 @@ function _init()
    lh1=7,
    lh2=6,
   },
-   { --orange
+  { --orange
    p=9,
    s=4,
    eyes=2,
@@ -1273,19 +1273,27 @@ function drawui()
  for i=1,maxgames do
   local lightspr=9
 
+  --centre sprite
   if i==(flr(maxgames/2+1)) then
    lightspr=25
   end
 
-  pal(15,p1.cols.lh1)
-  pal(3,p1.cols.lh2)
+  --change cols based on altcolor
+
+  --highlight defaults
+  pal(15,7)
+  pal(3,6)
 
   if i<=p1.score then
    pal(13,p1.cols.p)
+   pal(15,p1.cols.lh1)
+   pal(3,p1.cols.lh2)
   end
 
   if i>(maxgames-p2.score) then
    pal(13,p2.cols.p)
+   pal(15,p2.cols.lh1)
+   pal(3,p2.cols.lh2)
   end
 
   spr(lightspr,i*8+(57-(maxgames/2)*8),3)
