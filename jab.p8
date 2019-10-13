@@ -168,9 +168,8 @@ function _init()
  sstage=nil
 
  createstage("normal",0,0,24,96,88,96)
- createstage("small",128,128,32,96,80,96)
- createstage("smaller",128,0,40,96,72,96)
- createstage("smallest",256,128,44,96,68,96)
+ createstage("smaller",128,128,32,96,80,96)
+ createstage("smallist",128,0,40,96,72,96)
  --createstage("smallest",256,128,44,64,68,64) -- for double ring out testing
  createstage("walls",768,0,24,96,88,96)
  createstage("ghost",256,0,24,48,88,96)
@@ -178,7 +177,7 @@ function _init()
  createstage("tredmill in",512,0,24,96,88,96)
  createstage("ice",640,0,24,96,88,96)
  createstage("podiums",0,128,48,96,72,96) --TODO: centre?... probs more work than it's worth.
- createstage("hole",896,0,24,96,88,96)
+ createstage("the pit",896,0,24,96,88,96)
 
  sstage=stages[ssid]
 
@@ -225,7 +224,9 @@ function _init()
    sfist=2,
    bg=14,
    wtc=14,
-   wto=13
+   wto=13,
+   lh1=7,
+   lh2=6,
   },
    { --green
    p=11,
@@ -260,7 +261,9 @@ function _init()
    sfist=1,
    bg=13,
    wtc=13,
-   wto=1
+   wto=1,
+   lh1=7,
+   lh2=6,
   },
   { --black and white
    p=6,
@@ -689,7 +692,6 @@ function updateav(av)
    av.anim=av.animwalkback
   end
 
-
   if btn(⬅️,av.no) then
    av.xvel-=av.xacc
   elseif btn(➡️,av.no) then
@@ -702,7 +704,7 @@ function updateav(av)
      av.xvel=0
     end
    end
-   
+
    if btn(⬆️,av.no) and not av.updown then
     av.updown=true
     sfx(58)
@@ -710,13 +712,13 @@ function updateav(av)
 
     --reset in state
     av.statetimer=1
-    
+
     av.anim=av.animuptaunt
    elseif btn(⬇️,av.no) and not av.downdown then
     av.downdown=true
     sfx(59)
     av.state="taunt"
-    
+
     --reset in state
     av.statetimer=1
 
@@ -724,7 +726,7 @@ function updateav(av)
    else
     av.anim=av.animidle
    end
- 
+
    if not btn(⬆️,av.no) then
     av.updown=false
    end
@@ -1102,7 +1104,7 @@ function drawcountdown()
 end
 
 stagetimer=0
-stagetoggletime=45
+stagetoggletime=15
 
 function drawgame()
  if p1.state=="wonmatchpause" or p2.state=="wonmatchpause" then
@@ -1124,13 +1126,15 @@ function drawgame()
  else
   drawbackground()
 
-  --draw tredmill arrows as flashing 
-  -- (assumes col 8 and 12 aren't used anywhere else but the arrows)
+  --draw tredmill arrows as flashing
   stagetimer+=1
 
-  if stagetimer >=stagetoggletime then
-   pal(12,1)
-   pal(8,2)
+  if stagetimer>=stagetoggletime then
+   pal(12,p1.cols.p)
+   pal(8,p2.cols.p)
+  else
+   pal(12,p1.cols.s)
+   pal(8,p2.cols.s)
   end
 
   if stagetimer >=(stagetoggletime*2) then

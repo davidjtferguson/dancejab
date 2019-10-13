@@ -32,3 +32,4 @@ up taunt - 58
 down taunt - 59
 clank - 60
 toggle color - 61
+press start - 62
