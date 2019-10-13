@@ -191,6 +191,7 @@ function _init()
  -- background orbs,
  -- win text centre
  -- win text outline
+ -- light highlight 1 and 2
  altcolors={
   { --red (p1 default)
    p=8,
@@ -200,7 +201,9 @@ function _init()
    sfist=2,
    bg=2,
    wtc=8,
-   wto=10
+   wto=10,
+   lh1=7,
+   lh2=6,
   },
   { --blue (p2 default)
    p=12,
@@ -210,7 +213,9 @@ function _init()
    sfist=1,
    bg=1,
    wtc=12,
-   wto=13
+   wto=13,
+   lh1=7,
+   lh2=6,
   },
   { --green
    p=11,
@@ -220,7 +225,9 @@ function _init()
    sfist=3,
    bg=3,
    wtc=3,
-   wto=11
+   wto=11,
+   lh1=7,
+   lh2=6,
   },
   { --gold
    p=10,
@@ -230,7 +237,9 @@ function _init()
    sfist=4,
    bg=9,
    wtc=8,
-   wto=10
+   wto=10,
+   lh1=7,
+   lh2=6,
   },
   { --black and white
    p=7,
@@ -240,7 +249,9 @@ function _init()
    sfist=5,
    bg=5,
    wtc=0,
-   wto=7
+   wto=7,
+   lh1=7,
+   lh2=6,
   }
  }
 
@@ -336,7 +347,7 @@ end
 
 function updatestart()
  if pxbtnp(❎) or pxbtnp(🅾️) then
-  sfx(4)
+  sfx(62)
   p1.anim=p1.animidle
   p2.anim=p2.animidle
   currentupdate=updatemenu
@@ -512,6 +523,8 @@ function detectinputs(av)
    --dash to the right
    av.xvel=av.xdashmaxvel
   end
+  
+  resetanim(av.anim)
 
   --kick up dust
   -- (done after as needs xvel set)
@@ -665,7 +678,6 @@ function updateav(av)
     --reset in state
     av.statetimer=1
     
-    av.animuptaunt.finished=false
     av.anim=av.animuptaunt
    elseif btn(⬇️,av.no) and not av.downdown then
     av.downdown=true
@@ -675,7 +687,6 @@ function updateav(av)
     --reset in state
     av.statetimer=1
 
-    av.animdowntaunt.finished=false
     av.anim=av.animdowntaunt
    else
     av.anim=av.animidle
@@ -1229,16 +1240,20 @@ function drawui()
    lightspr=25
   end
 
+  pal(15,p1.cols.lh1)
+  pal(3,p1.cols.lh2)
+
   if i<=p1.score then
-   lightspr+=1
+   pal(13,p1.cols.p)
   end
 
   if i>(maxgames-p2.score) then
-   lightspr+=2
+   pal(13,p2.cols.p)
   end
 
-  --TODO:going to have to split up the drawing here to do them in the right cols
   spr(lightspr,i*8+(57-(maxgames/2)*8),3)
+
+  resetpal()
  end
 end
 
@@ -1380,9 +1395,7 @@ function updateanim(a)
   -- so restart anim
   -- note:may go weird after 9 hours...
   if time()-a.t > 1/30 then
-   a.counter=0
-   a.along=1
-   finished=false
+   resetanim(a)
   end
 
   a.t=time()
@@ -1417,6 +1430,12 @@ function updateanim(a)
   
   a.sprite=a.sprites[a.along]
  end
+end
+
+function resetanim(a)
+ a.counter=0
+ a.along=1
+ a.finished=false
 end
 
 -->8
@@ -1621,29 +1640,29 @@ function updatepeflame(e)
 end
 
 __gfx__
-00000000d6666666cc7ccbbbd66666666666666dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb5665bbbb5665bbbb5665bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-000000002dddddd667cccbbb2dddd6d66d6dddd2bbbbbbbbbbbbbbbbbb28888882bbbbbbb57dd75bb578875bb57cc75bbbbbbbbbbbbbbbbbbbbbbbbbbbbb5000
-007007002d2666d676cccbbb27766c7667866772bbbbbbbbbbbbbbbbb2888887878bbbbbb6dd676bb688e76bb6cc676bbbbbbb000bbbbbbbbbbbbbbbbbbb5670
-000770002d2dd6d6cccccbbb2cccccc778888882bbbbb288888882bbb88888888872bbbbb6dd766bb6887e6bb6cc766b0000000670bbbbb000bb000bbbbb0770
-000770002d2dd6d6cccccbbb2cccccc228888882bbbb28888878782b288888888888bbbbb6dddd6bb688886bb6cccc6b06777707700000006700670000000770
-007007002d2222d6cccccbbb22222c2662822222bbbb88888888878b8888288888282bbbb6dddd6bb688886bb6cccc6b06767700006777770700775777770670
-000000002dddddd6cccccbbb25ddd2d66d2ddd52bbb28888888888828888233323388bbbb57dd75bb578875bb57cc75b06755006707777770700770777770670
-000000002222222dccccbbbb2222222dd2222222bbb88882888888288888823223288bbbbb5665bbbb5665bbbb5665bb07777007707700006700770067000670
-5ddddddd77777777bbbbbbbbbbbbbbbbbbbbbbbbbbb888822888822888888822e2888bbbb499aa4bb499aa4bb499aa4b077670077077006707777705770b5770
-2555555d1d777777b51111000000000000001bbbbc7c8881332233282c7c8888e2888bbb4adddda44a8888a44acccca4077000077077007707777700770bb00b
-255ddd5d171667d6b1bbbbbbbbbbbbbbbbbb65bbccc7c2883eee3228bcc7c2882288bbbb9ddd67d99888e7899ccc67c90770bb076077777707007700770bbbbb
-25255d5d1d1dd6d6b1bbbbbbbbbbbbbbbbbb761bcccc7c888eeee28bbccc7c2888bbbbbb9ddd76d998887e899ccc76c90670bb055067777707007700770b5000
-25255d5d1d1dd6d6b567bbbbbbbbbbbbbbbbbb1bcccccc2888ee288bbccccc8882bbbbbb9dd6ddd9988e88899cc6ccc90770bbbbbb05500007007700770b0670
-2522255d1d1111d6bb56bbbbbbbbbbbbbbbbbb1bccc1cc22828888bbbcccc188882bbbbb9dddddd9988888899cccccc90000bbbbbbbbbbb005bb5000670b0660
-2555555d1dddddd6bbb5100000000000011111db6c11cbb88888bbbbb6cc1c88882bbbbb4adddda44a8888a44acccca4bbbbbbbbbbbbbbbbbbbbbbbb000b5005
-222222251111111dbbbbbbbbbbbbbbbbbbbbbbbbb66bbbebbbebbbbbbb66bbebbbbebbbbb4999a4bb4999a4bb4999a4bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+00000000d6666666cc7ccbbbd66666666666666dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb5665bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+000000002dddddd667cccbbb2dddd6d66d6dddd2bbbbbbbbbbbbbbbbbb28888882bbbbbbb57dd75bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb5000
+007007002d2666d676cccbbb27766c7667866772bbbbbbbbbbbbbbbbb2888887878bbbbbb6dd3f6bbbbbbbbbbbbbbbbbbbbbbb000bbbbbbbbbbbbbbbbbbb5670
+000770002d2dd6d6cccccbbb2cccccc778888882bbbbb288888882bbb88888888872bbbbb6ddf36bbbbbbbbbbbbbbbbb0000000670bbbbb000bb000bbbbb0770
+000770002d2dd6d6cccccbbb2cccccc228888882bbbb28888878782b288888888888bbbbb6dddd6bbbbbbbbbbbbbbbbb06777707700000006700670000000770
+007007002d2222d6cccccbbb22222c2662822222bbbb88888888878b8888288888282bbbb6dddd6bbbbbbbbbbbbbbbbb06767700006777770700775777770670
+000000002dddddd6cccccbbb25ddd2d66d2ddd52bbb28888888888828888233323388bbbb57dd75bbbbbbbbbbbbbbbbb06755006707777770700770777770670
+000000002222222dccccbbbb2222222dd2222222bbb88882888888288888823223288bbbbb5665bbbbbbbbbbbbbbbbbb07777007707700006700770067000670
+5ddddddd77777777bbbbbbbbbbbbbbbbbbbbbbbbbbb888822888822888888822e2888bbbb499aa4bbbbbbbbbbbbbbbbb077670077077006707777705770b5770
+2555555d1d777777b51111000000000000001bbbbc7c8881332233282c7c8888e2888bbb4adddda4bbbbbbbbbbbbbbbb077000077077007707777700770bb00b
+255ddd5d171667d6b1bbbbbbbbbbbbbbbbbb65bbccc7c2883eee3228bcc7c2882288bbbb9ddd3fd9bbbbbbbbbbbbbbbb0770bb076077777707007700770bbbbb
+25255d5d1d1dd6d6b1bbbbbbbbbbbbbbbbbb761bcccc7c888eeee28bbccc7c2888bbbbbb9dddf3d9bbbbbbbbbbbbbbbb0670bb055067777707007700770b5000
+25255d5d1d1dd6d6b567bbbbbbbbbbbbbbbbbb1bcccccc2888ee288bbccccc8882bbbbbb9dd3ddd9bbbbbbbbbbbbbbbb0770bbbbbb05500007007700770b0670
+2522255d1d1111d6bb56bbbbbbbbbbbbbbbbbb1bccc1cc22828888bbbcccc188882bbbbb9dddddd9bbbbbbbbbbbbbbbb0000bbbbbbbbbbb005bb5000670b0660
+2555555d1dddddd6bbb5100000000000011111db6c11cbb88888bbbbb6cc1c88882bbbbb4adddda4bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb000b5005
+222222251111111dbbbbbbbbbbbbbbbbbbbbbbbbb66bbbebbbebbbbbbb66bbebbbbebbbbb4999a4bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 2222f22257777777bbbbb888888888bbb6bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0000bbbbb000bbbbbb000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 2ffffff217777777bbbb88888888888bb7bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb067770bbb07770bbbb0670bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-2ffffff2157ddd7dbbb888888888888bb666bb67bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0777770b0677770bb06770bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-fffffff215157d5dbbb888888888888bb7b7b6b7bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb005670b0770770bbb0770bbbbbbbbbbbbbbbbbbbbbbbb88888888bb
-2fffffff15155d5dbbb888888888888bb7b7b777bbbbb888888888bbbbbbbbbbbbbbbbbbb066770bb007770bbb0770bbbbbbbbbbbbbbbbbbbbbbb2888888782b
-fffffff21511155dbbb888888888888bbbbbbbbbbbbb28888878782bbbbbbbbbbbbbbbbbb005670bb06750bbbb0770bbbbbbbbbbbbbbbbbbbbbb88888888878b
-2ffffff21555555dbbb888833888833bbbbbbbbbbbb2888888888782bbbbbbbbbbbbbbbb0677770b0677770bbb0770bbbbbbbbbbbbbbbbbbbbbb888888888882
+2ffffff2157ddd7dbbb8888888888888b666bb67bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0777770b0677770bb06770bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+fffffff215157d5dbbb8888888888888b7b7b6b7bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb005670b0770770bbb0770bbbbbbbbbbbbbbbbbbbbbbbb88888888bb
+2fffffff15155d5dbbb8888888888888b7b7b777bbbbb888888888bbbbbbbbbbbbbbbbbbb066770bb007770bbb0770bbbbbbbbbbbbbbbbbbbbbbb2888888782b
+fffffff21511155dbbb8888888888888bbbbbbbbbbbb28888878782bbbbbbbbbbbbbbbbbb005670bb06750bbbb0770bbbbbbbbbbbbbbbbbbbbbb88888888878b
+2ffffff21555555dbbb8888338888338bbbbbbbbbbb2888888888782bbbbbbbbbbbbbbbb0677770b0677770bbb0770bbbbbbbbbbbbbbbbbbbbbb888888888882
 2222f22211111115bbb8888533883358bbbbbbbbbbb8888888888888b288888878782bbb0777770b0777770bbb0670bbbbb2888888822bbbbbb2888888222888
 dddddd1dd6ddddddbbb8888853ee3588bbbbbbbbbbb8828288888828288c7c88888782bb000000bb0000000bbb0000bbbb2888888888882bbbb2888882233888
 d11111111d66661dcccccc888eeee88bcccccbbbbc7c22222888822888ccc7c88888888bbbbbbbbbbbbbbbbbbbbbbbbbbcc7c88888888882bbb2888888223eeb
@@ -1978,6 +1997,7 @@ __sfx__
 000500000ff500df500cf500cf500cf500df500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0103000035670296701b6731b6531b123106431015324673376733f2033c7033c613216101b61316623106200a610046100a710047100a600046000a600046000000000000000000000000000000000000000000
 001000001fb501fb50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0007000016a5016a5013a5011a5018a50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __music__
 00 52595644
 00 12191144
