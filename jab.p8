@@ -1147,12 +1147,12 @@ function drawgame()
 
   resetpal()
 
-  drawwithavcolours(p1,drawav)
-  drawwithavcolours(p2,drawav)
+  drawwithavcolors(p1,drawav)
+  drawwithavcolors(p2,drawav)
   
   --draw player1 hitboxes again
   -- on top of p2
-  drawwithavcolours(p1,drawavhitboxes)
+  drawwithavcolors(p1,drawavhitboxes)
 
   --draw particle effects ontop of
   -- players but behind ui
@@ -1226,7 +1226,7 @@ function drawav(av)
  drawavhitboxes(av,randx,randy)
 end
 
-function drawwithavcolours(av,drawing)
+function drawwithavcolors(av,drawing)
  pal(8,av.cols.p)
  pal(2,av.cols.s)
  pal(14,av.cols.st)
