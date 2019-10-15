@@ -639,23 +639,6 @@ function updateav(av)
     av.oav.fist.active=false
    end
 
-   --have we both died on the same frame?
-   --TODO:fix this. currently p1's death is registered first, so p2 wins the round
-   -- even if p2 isn't actually on the ground.
-   -- but... this didn't work. and I'm tired right now. so might do it later.
-   -- or maybe not.
-   -- if checkavflagarea(globalbox(av.oav,av.oav.groundbox),0) then
-   --  --no point awarded for draw
-   --  -- (because it's easiest)
-   --  av.oav.score-=1
-   --  av.oav.state="ringout"
-   --  av.oav.hitpoints=0
-    
-   --  if av.oav.fist then
-   --   del(hitboxes,av.oav.fist)
-   --  end
-   -- end
-
    --prevent double death
    if av.state!="dead" then
     sfx(15)
@@ -851,9 +834,6 @@ function updateav(av)
    av.xvel=0
   end
 
-  --TODO:what if we both die on the same frame
-  -- on the last round?
-
  elseif av.state=="ringout" then
   --make sure we overrite others,
   -- e.g. lost anim
@@ -999,6 +979,15 @@ end
 function updatescore(av)
  av.oav.score+=1
  
+ --if we both died on the same frame, need to not award points
+ -- yeah, it'd be nice if they both got the point, and then
+ -- if you both reached first to there was some kind of stand off
+ -- but that's a lot more expensive
+ if av.oav.hitpoints==0 then
+  av.score-=1
+  av.oav.score-=1
+ end
+
  av.oav.state="wonround"
  if av.oav.score==firstto then
   music(-1)
