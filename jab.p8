@@ -386,10 +386,15 @@ function resetround()
  roundinprogress=true
 end
 
+function _update60()
+ currentupdate()
+end
+
 function initcountdown()
  mmusic(1)
  p1.anim=p1.animcountdown
  p2.anim=p2.animcountdown
+
 
  ct=0
  ctvel=0
@@ -397,8 +402,31 @@ function initcountdown()
  countdownno=3
 end
 
-function _update60()
- currentupdate()
+function updatecountdown() 
+ updateanim(p1.anim)
+ updateanim(p2.anim)
+
+ if countdownno==3 and ctvel==0 then
+  sfx(2)
+ end
+
+ ctvel+=0.35 
+ ct+=ctvel
+
+ if ct>=128 then
+  ct=0
+  ctvel=0
+  xcorner+=8
+  countdownno-=1
+  sfx(2,3)
+ end
+
+ if countdownno==0 then
+  --start fight
+  sfx(3,3)
+  currentupdate=updategame
+  currentdraw=drawgame
+ end
 end
 
 function updatestart()
@@ -515,33 +543,6 @@ function loadstage()
  p1.y=sstage.p1y
  p2.x=sstage.p2x
  p2.y=sstage.p2y
-end
-
-function updatecountdown() 
- updateanim(p1.anim)
- updateanim(p2.anim)
-
- if countdownno==3 and ctvel==0 then
-  sfx(2)
- end
-
- ctvel+=0.35 
- ct+=ctvel
-
- if ct>=128 then
-  ct=0
-  ctvel=0
-  xcorner+=8
-  countdownno-=1
-  sfx(2,3)
- end
-
- if countdownno==0 then
-  --start fight
-  sfx(3,3)
-  currentupdate=updategame
-  currentdraw=drawgame
- end
 end
 
 function updategame()
@@ -1174,8 +1175,15 @@ function drawgame()
   -- set in updatecountdown
   if countdownno==0 and ct<30 then
    ct+=1
+
+   local shake=0
+
+   if ct<20 then
+    shake=(30/ct)
+   end
+
    sspr(96,0,32,16,
-    32,48,
+    32+(rnd(shake)-shake/2),48+(rnd(shake)-shake/2),
     64,32)
   end
 
