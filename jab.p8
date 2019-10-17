@@ -293,21 +293,41 @@ function _init()
 
  resetmatch()
  
- music(20)
+ currentmusic=20
+ musicon=true
+
+ mmusic(currentmusic)
  currentupdate=updatestart
  currentdraw=drawstart
 
  menuitem(1, "exit to menu", exittomenu)
+ menuitem(2, "toggle music", togglemusic)
 end
 
 function exittomenu()
  resetmatch()
- music(20)
+ mmusic(20)
  currentupdate=updatemenu
  currentdraw=drawmenu
 
  p1.anim=p1.animidle
  p2.anim=p2.animidle
+end
+
+function togglemusic()
+ musicon=not musicon
+ mmusic(currentmusic)
+end
+
+--mutable music
+function mmusic(no)
+ currentmusic=no
+
+ if musicon then
+  music(currentmusic)
+ else
+  music(-1)
+ end
 end
 
 function resetmatch()
@@ -367,7 +387,7 @@ function resetround()
 end
 
 function initcountdown()
- music(1)
+ mmusic(1)
  p1.anim=p1.animcountdown
  p2.anim=p2.animcountdown
 
@@ -789,7 +809,7 @@ function updateav(av)
   if av.statetimer==0 then
    av.state="wonmatch"
    av.statetimer=90  
-   music(17)
+   mmusic(17)
   end
 
   --prevent ringing out during pause
