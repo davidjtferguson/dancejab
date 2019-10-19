@@ -97,6 +97,7 @@ function createav(x,y,name,flipped)
   animuptaunt=createanim({66,168,68,170,66,172,174,64,172,174},{2,2,2,9,2,2,3,5,2,2,5},false),
   animdowntaunt=createanim({64,234,236,64,226,228,64,234,236,234},{3,4,13,2,3,5,2,3,5,3},false),
   animstoponother=createanim({200,236,44},{5,5,10}),
+  animpreroundpause=createanim(34),
 
   hitpoints=maxhitpoints,
  
@@ -403,7 +404,6 @@ function initcountdown()
  p1.anim=p1.animcountdown
  p2.anim=p2.animcountdown
 
-
  ct=0
  ctvel=0
  xcorner=72
@@ -628,7 +628,7 @@ function updateav(av)
  if av.hitpoints==0 and av.state!="dead" and av.state!="ringout" then
   av.anim=av.animlostround
   av.state="dead"
-  av.statetimer=90
+  av.statetimer=75
 
   if av.fist then
    del(hitboxes,av.fist)
@@ -814,10 +814,40 @@ function updateav(av)
   if av.anim.looping or av.anim.finished then
    av.anim=av.animvictory
   end
+ 
+  if av.statetimer==0 then
+   sfx(2)
+   av.state="respawning"
+
+   --TODO:replace with our new effect
+   initpehit(av.x,av.y,1,10,4,7,{7,av.cols.p,av.oav.cols.p})
+
+   av.statetimer=27
+  end
+
+ elseif av.state=="respawning" then
+  
+  if av.statetimer==0 then
+   sfx(2)
+   av.state="preroundpause"
+
+   resetround()
+
+   p1.state="preroundpause"
+   p1.statetimer=27
+   p2.state="preroundpause"
+   p2.statetimer=27
+  end
+ elseif av.state=="preroundpause" then
+  av.anim=av.animpreroundpause
+
+  if av.statetimer==0 then
+   sfx(3)
+  end
  elseif av.state=="wonmatchpause" then
   if av.statetimer==0 then
    av.state="wonmatch"
-   av.statetimer=90  
+   av.statetimer=90
    mmusic(17)
   end
 
@@ -877,11 +907,6 @@ function updateav(av)
  if av.statetimer==0 and
     (av.state!="wonmatch" and av.oav.state!="wonmatch") then
   av.state="none"
-
-  if not roundinprogress then
-   resetround()  
-   sfx(3)
-  end
  end
 
  updateanim(av.anim)
@@ -1273,14 +1298,14 @@ end
 
 function drawui()
  --p1 health
- rectfill(5,5,24,8,13)
+ rectfill(5,5,24,8,5)
  if p1.hitpoints>0 then
   rectfill(5,5,4+(20*(p1.hitpoints/maxhitpoints)),8,p1.cols.p)
  end
  spr(18,3,3,3,1,true)
 
  --p2 health
- rectfill(103,5,122,8,13)
+ rectfill(103,5,122,8,5)
  if p2.hitpoints>0 then
   rectfill(103+20-20*(p2.hitpoints/maxhitpoints),5,122,8,p2.cols.p)
  end
@@ -1695,8 +1720,8 @@ function updatepeflame(e)
   p.x+=p.xvel
   p.y+=p.yvel
 
-  --raise upwards
-  p.yvel-=0.1
+  --fall like confettii
+  p.yvel+=0.1
   
   p.lifespan-=1
   if p.lifespan<=0 then
