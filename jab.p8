@@ -452,6 +452,10 @@ function updatemenu()
  updateanim(p1.anim)
  updateanim(p2.anim)
 
+ for box in all(hitboxes) do
+  updatehitbox(box)
+ end
+
  if pxbtnp(⬇️) then
   sfx(5)
   optionselected+=1
@@ -532,12 +536,21 @@ function colstoggle(av)
  --loop through colors with x
  if btnp(❎,av.no) then
   sfx(61)
+
+  av.anim=av.animjab
+  av.fist=createhitbox(av.jabwidth,av.jabheight,av)
+
   av.colsindex+=1
 
   if av.colsindex>#altcolors then
    av.colsindex=1
   end
   av.cols=altcolors[av.colsindex]
+ end
+
+ if av.anim.finished then
+  resetanim(av.anim)
+  av.anim=av.animidle
  end
 end
 
@@ -1053,11 +1066,10 @@ end
 function updatehitbox(box)
  updateanim(box.anim)
 
- if not box.active then
-  if box.anim.finished then
-   del(hitboxes,box)
-   return
-  end
+ --remove once jab is over
+ if box.anim.finished then
+  del(hitboxes,box)
+  return
  end
 
  --track av pos
@@ -1066,12 +1078,7 @@ function updatehitbox(box)
  else
   box.x=box.av.x-box.width-1
  end
- 
- --remove once jab is over
- if box.av.state=="jablag" then
-  del(hitboxes,box)
- end
- 
+
  for otherbox in all(hitboxes) do
   if aabbcollision(box,otherbox) and
      box.pno!=otherbox.pno and
@@ -1738,11 +1745,11 @@ function initpetransition()
  local e=createeffect(updatepestraight)
  
  local p=createparticle(
-   -64,64,
-   12,
-   0,
-   96,0,
-   90)
+  -64,64,
+  12,
+  0,
+  96,0,
+  90)
  add(e.particles,p)
 end
 
