@@ -189,9 +189,10 @@ function _init()
  -- skin tone,
  -- secondary for the opponent's fist,
  -- background orbs,
- -- win text centre
- -- win text outline
- -- light highlight 1 and 2
+ -- win text centre,
+ -- win text outline,
+ -- light color when getting a point,
+ -- light highlight 1 and 2,
  altcolors={
   { --red (p1 default)
    p=8,
@@ -819,23 +820,22 @@ function updateav(av)
    sfx(2)
    av.state="respawning"
 
-   initperespawn()
+   initpetransition()
 
-   av.statetimer=27
+   av.statetimer=15
   end
 
  elseif av.state=="respawning" then
   
   if av.statetimer==0 then
-   sfx(2)
    av.state="preroundpause"
 
    resetround()
 
    p1.state="preroundpause"
-   p1.statetimer=27
+   p1.statetimer=12
    p2.state="preroundpause"
-   p2.statetimer=27
+   p2.statetimer=12
   end
  elseif av.state=="preroundpause" then
   av.anim=av.animpreroundpause
@@ -1047,7 +1047,7 @@ function updatescore(av)
   av.oav.state="wonmatchpause"
  end
 
- av.oav.statetimer=90
+ av.oav.statetimer=60
 end
 
 function updatehitbox(box)
@@ -1733,51 +1733,26 @@ function updatepeflame(e)
  end
 end
 
---circles cover the players current pos and their respawn pos
--- to cover the switch
-function initperespawn()
- local e=createeffect(updateperespawn)
+--black circle wipe
+function initpetransition()
+ local e=createeffect(updatepestraight)
  
- local vals={
-  {x=p1.x+p1.width/2, y=p1.y+p1.height/2, cp=p1.cols.p, cs=p1.cols.s},
-  {x=p2.x+p2.width/2, y=p2.y+p2.height/2, cp=p2.cols.p, cs=p2.cols.s},
-  {x=sstage.p1x+p1.width/2, y=sstage.p1y+p1.height/2, cp=p1.cols.p, cs=p1.cols.s},
-  {x=sstage.p2x+p2.width/2, y=sstage.p2y+p2.height/2, cp=p2.cols.p, cs=p2.cols.s},
- }
-
- for val in all(vals) do
-  local ps=createparticle(
-   val.x,val.y,
+ local p=createparticle(
+   -64,64,
+   12,
    0,
-   0,
-   2,val.cs,
-   45)
-  ps.vel=2
-  ps.gravity=0.1
-  add(e.particles,ps)
-
-  local pp=createparticle(
-   val.x,val.y,
-   0,
-   0,
-   1,val.cp,
-   45)
-  pp.vel=1.5
-  pp.gravity=0.1
-  add(e.particles,pp)
- end
+   96,0,
+   90)
+ add(e.particles,p)
 end
 
-function updateperespawn(e)
+function updatepetransition(e)
  for p in all(e.particles) do
-  p.r+=p.vel
+  p.x+=p.xvel
+  
+  p.lifespan-=1
 
-  --let the circle grow then shrink,
-  -- like a jump arc
-  p.vel-=p.gravity
-
-  if p.r<0 then
-   initpehit(p.x,p.y,3,4,10,7,{7,p.col})
+  if p.lifespan<=0 then
    del(e.particles,p)
   end
  end
@@ -1786,6 +1761,7 @@ function updateperespawn(e)
   del(effects,e)
  end
 end
+
 
 __gfx__
 00000000d6666666cc7ccbbbd66666666666666dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb5665bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
