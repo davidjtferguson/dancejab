@@ -97,7 +97,7 @@ function createav(x,y,name,flipped)
   animuptaunt=createanim({66,168,68,170,66,172,174,64,172,174},{2,2,2,9,2,2,3,5,2,2,5},false),
   animdowntaunt=createanim({64,234,236,64,226,228,64,234,236,234},{3,4,13,2,3,5,2,3,5,3},false),
   animstoponother=createanim({200,236,44},{5,5,10}),
-  animpreroundpause=createanim(34),
+  animpreroundpause=createanim({64,234,236,64,226,228},{3,4,16,3,4,16}),
 
   hitpoints=maxhitpoints,
  
@@ -811,8 +811,7 @@ function updateav(av)
    sfx(2)
    av.state="respawning"
 
-   --TODO:replace with our new effect
-   initpehit(av.x,av.y,1,10,4,7,{7,av.cols.p,av.oav.cols.p})
+   initperespawn()
 
    av.statetimer=27
   end
@@ -1721,6 +1720,60 @@ function updatepeflame(e)
   end
  end
 
+ if #e.particles==0 then
+  del(effects,e)
+ end
+end
+
+--circles cover the players current pos and their respawn pos
+-- to cover the switch
+function initperespawn()
+ local e=createeffect(updateperespawn)
+ 
+ local vals={
+  {x=p1.x+p1.width/2, y=p1.y+p1.height/2, cp=p1.cols.p, cs=p1.cols.s},
+  {x=p2.x+p2.width/2, y=p2.y+p2.height/2, cp=p2.cols.p, cs=p2.cols.s},
+  {x=sstage.p1x+p1.width/2, y=sstage.p1y+p1.height/2, cp=p1.cols.p, cs=p1.cols.s},
+  {x=sstage.p2x+p2.width/2, y=sstage.p2y+p2.height/2, cp=p2.cols.p, cs=p2.cols.s},
+ }
+
+ for val in all(vals) do
+  local ps=createparticle(
+   val.x,val.y,
+   0,
+   0,
+   2,val.cs,
+   45)
+  ps.vel=2
+  ps.gravity=0.1
+  add(e.particles,ps)
+
+  local pp=createparticle(
+   val.x,val.y,
+   0,
+   0,
+   1,val.cp,
+   45)
+  pp.vel=1.5
+  pp.gravity=0.1
+  add(e.particles,pp)
+ end
+end
+
+function updateperespawn(e)
+ for p in all(e.particles) do
+  p.r+=p.vel
+
+  --let the circle grow then shrink,
+  -- like a jump arc
+  p.vel-=p.gravity
+
+  if p.r<0 then
+   initpehit(p.x,p.y,3,4,10,7,{7,p.col})
+   del(e.particles,p)
+  end
+ end
+ 
  if #e.particles==0 then
   del(effects,e)
  end
