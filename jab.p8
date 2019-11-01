@@ -526,6 +526,7 @@ function updatemenu()
  colstoggle(p2)
 
  if pxbtnp(🅾️) then
+  hitboxes={}
   initcountdown()
   currentupdate=updatecountdown
   currentdraw=drawcountdown
@@ -538,6 +539,12 @@ function colstoggle(av)
   sfx(61)
 
   av.anim=av.animjab
+  resetanim(av.anim)
+
+  if av.fist then
+   del(hitboxes,av.fist)
+  end   
+
   av.fist=createhitbox(av.jabwidth,av.jabheight,av)
 
   av.colsindex+=1
@@ -1067,7 +1074,7 @@ function updatehitbox(box)
  updateanim(box.anim)
 
  --remove once jab is over
- if box.anim.finished then
+ if box.anim.finished and box.av.state!="jab" then
   del(hitboxes,box)
   return
  end
