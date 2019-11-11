@@ -160,8 +160,22 @@ function _init()
  modes={"normal","sumo","1 hit ko","slippy shoes"}
  mode=1
 
- -- menu controls
+ --menu controls
  optionselected=0
+
+ --round restart settings
+ -- frames from when a player dies till the first sfx is played and the transition starts
+ roundoverstartpause=60
+
+ -- frames till the players actually respawn (black circle should be covering the screen at this moment)
+ roundoverrespawn=15
+
+ -- frames after respawn before movement is allowed to give black circle time to leave the screen.
+ -- go sfx will be played when this is over
+ roundoverendpause=12
+
+ -- black circle's x velocity
+ transitionspeed=12
 
  --init stage select
  stages={}
@@ -842,7 +856,7 @@ function updateav(av)
 
    initpetransition()
 
-   av.statetimer=15
+   av.statetimer=roundoverrespawn
   end
 
  elseif av.state=="respawning" then
@@ -853,9 +867,9 @@ function updateav(av)
    resetround()
 
    p1.state="preroundpause"
-   p1.statetimer=12
+   p1.statetimer=roundoverendpause
    p2.state="preroundpause"
-   p2.statetimer=12
+   p2.statetimer=roundoverendpause
   end
  elseif av.state=="preroundpause" then
   av.anim=av.animpreroundpause
@@ -1067,7 +1081,7 @@ function updatescore(av)
   av.oav.state="wonmatchpause"
  end
 
- av.oav.statetimer=60
+ av.oav.statetimer=roundoverstartpause
 end
 
 function updatehitbox(box)
@@ -1753,7 +1767,7 @@ function initpetransition()
  
  local p=createparticle(
   -64,64,
-  12,
+  transitionspeed,
   0,
   96,0,
   90)
