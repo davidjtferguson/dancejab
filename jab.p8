@@ -660,7 +660,7 @@ function updateav(av)
  -- as something else happening, so their death is interupted by
  -- another state
  -- pretty buggy, but prevents a softlock...?
- if av.hitpoints==0 and av.state!="dead" and av.state!="ringout" then
+ if av.hitpoints==0 and av.state!="dead" and av.state!="ringout" and av.state!="respawning" then
   av.anim=av.animlostround
   av.state="dead"
   av.statetimer=75
@@ -692,7 +692,7 @@ function updateav(av)
   end
  else
   --on first ringout detection
-  if av.state!="ringout" then
+  if av.state!="ringout" and av.state!="respawning" then
    av.hitpoints=0
 
    if av.fist then
@@ -851,12 +851,7 @@ function updateav(av)
   end
  
   if av.statetimer==0 then
-   sfx(2)
-   av.state="respawning"
-
-   initpetransition()
-
-   av.statetimer=roundoverrespawn
+   triggerrespawn(av)
   end
 
  elseif av.state=="respawning" then
@@ -926,6 +921,10 @@ function updateav(av)
    av.xvel=0
   end
 
+  --handle double death respawn trigger
+  if av.statetimer==0 and av.oav.hitpoints==0 and (av.oav.state=="dead" or av.oav.state=="ringout") then
+   triggerrespawn(av)
+  end
  elseif av.state=="ringout" then
   --make sure we overrite others,
   -- e.g. lost anim
@@ -933,6 +932,11 @@ function updateav(av)
   av.xvel*=0.9
   
   av.yvel+=gravity
+
+  --handle double death respawn trigger
+  if av.statetimer==0 and av.oav.hitpoints==0 and (av.oav.state=="dead" or av.oav.state=="ringout") then
+   triggerrespawn(av)
+  end
  end
 
  --reset state, or the round
@@ -981,6 +985,15 @@ function updateav(av)
 
  av.x+=av.xvel
  av.y+=av.yvel
+end
+
+function triggerrespawn(av)
+   sfx(2)
+   av.state="respawning"
+
+   initpetransition()
+
+   av.statetimer=roundoverrespawn
 end
 
 function collidingwithotherav(av)
