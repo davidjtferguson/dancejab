@@ -98,6 +98,7 @@ function createav(x,y,name,flipped)
   animdowntaunt=createanim({64,234,236,64,226,228,64,234,236,234},{3,4,13,2,3,5,2,3,5,3},false),
   animstoponother=createanim({234,64,236,200},{5,4,9,5}),
   animpreroundpause=createanim({64,234,236,64,226,228},{3,4,16,3,4,16}),
+		animchangecolor=createanim({72,74},{3,5},false),
 
   hitpoints=maxhitpoints,
  
@@ -229,7 +230,7 @@ function _init()
    sfist=1,
    bg=1,
    wtc=12,
-   wto=13,
+   wto=7,
    point=12,
    lh1=7,
    lh2=6,
@@ -242,7 +243,7 @@ function _init()
    sfist=2,
    bg=2,
    wtc=14,
-   wto=13,
+   wto=7,
    point=14,
    lh1=7,
    lh2=15,
@@ -256,7 +257,7 @@ function _init()
    sfist=3,
    bg=3,
    wtc=3,
-   wto=11,
+   wto=7,
    point=3,
    lh1=7,
    lh2=11,
@@ -268,8 +269,8 @@ function _init()
    st=4,
    sfist=9,
    bg=9,
-   wtc=8,
-   wto=10,
+   wtc=9,
+   wto=7,
    point=10,
    lh1=7,
    lh2=15,
@@ -282,7 +283,7 @@ function _init()
    sfist=1,
    bg=1,
    wtc=13,
-   wto=1,
+   wto=7,
    point=1,
    lh1=7,
    lh2=6,
@@ -295,7 +296,7 @@ function _init()
    sfist=5,
    bg=5,
    wtc=0,
-   wto=5,
+   wto=7,
    point=5,
    lh1=7,
    lh2=6,
@@ -308,7 +309,7 @@ function _init()
    sfist=4,
    bg=4,
    wtc=9,
-   wto=4,
+   wto=7,
    point=9,
    lh1=7,
    lh2=10,
@@ -552,7 +553,7 @@ function colstoggle(av)
  if btnp(❎,av.no) then
   sfx(61)
 
-  av.anim=av.animjab
+  av.anim=av.animchangecolor
   resetanim(av.anim)
 
   if av.fist then
