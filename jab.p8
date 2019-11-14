@@ -160,8 +160,22 @@ function _init()
  modes={"normal","sumo","1 hit ko","slippy shoes"}
  mode=1
 
- -- menu controls
+ --menu controls
  optionselected=0
+
+ --round restart settings
+ -- frames from when a player dies till the first sfx is played and the transition starts
+ roundoverstartpause=60
+
+ -- frames till the players actually respawn (black circle should be covering the screen at this moment)
+ roundoverrespawn=15
+
+ -- frames after respawn before movement is allowed to give black circle time to leave the screen.
+ -- go sfx will be played when this is over
+ roundoverendpause=12
+
+ -- black circle's x velocity
+ transitionspeed=12
 
  --init stage select
  stages={}
@@ -646,7 +660,7 @@ function updateav(av)
  -- as something else happening, so their death is interupted by
  -- another state
  -- pretty buggy, but prevents a softlock...?
- if av.hitpoints==0 and av.state!="dead" and av.state!="ringout" then
+ if av.hitpoints==0 and av.state!="dead" and av.state!="ringout" and av.state!="respawning" then
   av.anim=av.animlostround
   av.state="dead"
   av.statetimer=75
@@ -678,7 +692,7 @@ function updateav(av)
   end
  else
   --on first ringout detection
-  if av.state!="ringout" then
+  if av.state!="ringout" and av.state!="respawning" then
    av.hitpoints=0
 
    if av.fist then
@@ -837,12 +851,7 @@ function updateav(av)
   end
  
   if av.statetimer==0 then
-   sfx(2)
-   av.state="respawning"
-
-   initpetransition()
-
-   av.statetimer=15
+   triggerrespawn(av)
   end
 
  elseif av.state=="respawning" then
@@ -853,9 +862,9 @@ function updateav(av)
    resetround()
 
    p1.state="preroundpause"
-   p1.statetimer=12
+   p1.statetimer=roundoverendpause
    p2.state="preroundpause"
-   p2.statetimer=12
+   p2.statetimer=roundoverendpause
   end
  elseif av.state=="preroundpause" then
   av.anim=av.animpreroundpause
@@ -912,6 +921,10 @@ function updateav(av)
    av.xvel=0
   end
 
+  --handle double death respawn trigger
+  if av.statetimer==0 and av.oav.hitpoints==0 and (av.oav.state=="dead" or av.oav.state=="ringout") then
+   triggerrespawn(av)
+  end
  elseif av.state=="ringout" then
   --make sure we overrite others,
   -- e.g. lost anim
@@ -919,6 +932,11 @@ function updateav(av)
   av.xvel*=0.9
   
   av.yvel+=gravity
+
+  --handle double death respawn trigger
+  if av.statetimer==0 and av.oav.hitpoints==0 and (av.oav.state=="dead" or av.oav.state=="ringout") then
+   triggerrespawn(av)
+  end
  end
 
  --reset state, or the round
@@ -967,6 +985,15 @@ function updateav(av)
 
  av.x+=av.xvel
  av.y+=av.yvel
+end
+
+function triggerrespawn(av)
+   sfx(2)
+   av.state="respawning"
+
+   initpetransition()
+
+   av.statetimer=roundoverrespawn
 end
 
 function collidingwithotherav(av)
@@ -1067,7 +1094,7 @@ function updatescore(av)
   av.oav.state="wonmatchpause"
  end
 
- av.oav.statetimer=60
+ av.oav.statetimer=roundoverstartpause
 end
 
 function updatehitbox(box)
@@ -1753,7 +1780,7 @@ function initpetransition()
  
  local p=createparticle(
   -64,64,
-  12,
+  transitionspeed,
   0,
   96,0,
   90)
@@ -1794,14 +1821,14 @@ __gfx__
 2522255d2d2222d6bb56bbbbbbbbbbbbbbbbbb1bccc1cc22828888bbbcccc188882bbbbb9dddddd9bbbbbb8d8bbbbbbb0000bbbbbbbbbbb005bb5000670b0660
 2555555d2dddddd6bbb5100000000000011111db6c11cbb88888bbbbb6cc1c88882bbbbb4adddda4bbbbbbb8bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb000b5005
 222222252222222dbbbbbbbbbbbbbbbbbbbbbbbbb66bbbebbbebbbbbbb66bbebbbbebbbbb4999a4bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-bddddddd77767777bbbbb888888888bbb6666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0000bbbbb000bbbbbb000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-2555555d67667666bbbb88888888888b2dddddd6bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb067770bbb07770bbbb0670bb222d6d66bbbbbbbbbbbbbbbbbbbbbbbb
-255ddd5d266ddd6dbbb88888888888882d2666d6bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0777770b0677770bb06770bb2222ddddbbbbbbbbbbbbbbbbbbbbbbbb
-25255d5d25255d5dbbb88888888888882d2dd6d6bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb005670b0770770bbb0770bbb222225bbbbbbbbbbbbbbb88888888bb
-25255d5d25255d5dbbb88888888888882d2dd6d6bbbbb888888888bbbbbbbbbbbbbbbbbbb066770bb007770bbb0770bbb22666dbbbbbbbbbbbbbb2888888782b
-2522255d2522255dbbb88888888888882d2222d6bbbb28888878782bbbbbbbbbbbbbbbbbb005670bb06750bbbb0770bbb22dd6dbbbbbbbbbbbbb88888888878b
-2555555d2555555dbbb88883388883382dddddd6bbb2888888888782bbbbbbbbbbbbbbbb0677770b0677770bbb0770bbb52dd6dbbbbbbbbbbbbb888888888882
-2222222522222225bbb88885338833582222222dbbb8888888888888b288888878782bbb0777770b0777770bbb0670bbb52225dbbbbbbbbbbbb2888888222888
+bddddddd77767777bbbbb888888888bbb6666666bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0000bbbbb000bbbbbb000bbbbbbbbbbd6666666bbbbbbbbbbbbbbbb
+2555555d67667666bbbb88888888888b2dddddd6bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb067770bbb07770bbbb0670bb222d6d665dddddd6bbbbbbbbbbbbbbbb
+255ddd5d266ddd6dbbb88888888888882d2666d6bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0777770b0677770bb06770bb2222dddd5d2666d6bbbbbbbbbbbbbbbb
+25255d5d25255d5dbbb88888888888882d2dd6d6bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb005670b0770770bbb0770bbb222225b5d2dd6d6bbbbbb88888888bb
+25255d5d25255d5dbbb88888888888882d2dd6d6bbbbb888888888bbbbbbbbbbbbbbbbbbb066770bb007770bbb0770bbb22666db5d2dd6d6bbbbb2888888782b
+2522255d2522255dbbb88888888888882d2222d6bbbb28888878782bbbbbbbbbbbbbbbbbb005670bb06750bbbb0770bbb22dd6db5d2222d6bbbb88888888878b
+2555555d2555555dbbb88883388883382dddddd6bbb2888888888782bbbbbbbbbbbbbbbb0677770b0677770bbb0770bbb52dd6db5dddddd6bbbb888888888882
+2222222522222225bbb88885338833582222222dbbb8888888888888b288888878782bbb0777770b0777770bbb0670bbb52225db2222222dbbb2888888222888
 d666666b5ddddddbbbb8888853ee3588bbbbbbbbbbb8828288888828288c7c88888782bb000000bb0000000bbb0000bbb5555d5bbbbbbbbbbbb2888882233888
 2dddddd62555555dcccccc888eeee88bcccccbbbbc7c22222888822888ccc7c88888888bbbbbbbbbbbbbbbbbbbbbbbbbb25555dbbbbbbbbbbbb2888888223eeb
 2d2666d6255ddd5dccc67c88eeee888bccc67cbbccc7c2233322332888cccc7c8888288bbbbbbbbbbbbbbbbbbbbbbbbbb52ddd5bbbbbbbbbbbbb28828222226c
@@ -2054,7 +2081,7 @@ __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002c0000000000000000000000002c002c00000000000000000000000000002c
 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003c0000000000000000000000003c003c00000000000000000000000000003c
-0000241001100110011001100131000000000000241001100110013100000000000024100110011001100110013100000000040404040401100303030303000000000303030303011004040404040000000021112111211121112111211100000020011001100110011001100110300024030303030303000004040404040431
+000024100110011001100110013100000000000024100110011001310000000000002410011001100110011001310000000004040404042d100303030303000000000303030303011004040404040000000021112111211121112111211100000020011001100110011001100110300024030303030303000004040404040431
 0000100110011001100110011001000000000000100110011001100100000000000010011001100110011001100100000000011001100110011001100110000000000110011001100110011001100000000001100110011001100110011000000001100110011001100110011001100010011001100110000001100110011001
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
